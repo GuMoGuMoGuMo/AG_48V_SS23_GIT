@@ -1,0 +1,4 @@
+#ifndef RTW_HEADER_Erregerstrom_Regelung_acc_types_h_
+#define RTW_HEADER_Erregerstrom_Regelung_acc_types_h_
+typedef struct P_Erregerstrom_Regelung_T_ P_Erregerstrom_Regelung_T ;
+#endif
