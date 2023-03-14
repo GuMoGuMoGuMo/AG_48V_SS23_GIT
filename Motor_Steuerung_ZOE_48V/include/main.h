@@ -18,10 +18,10 @@ float I_Erregung_MAX = U_BATT_TRAKTION_48V/R_ROTOR; //A zunächst als konstant a
 unsigned short dc_pwm;
 
 unsigned long last_time;
-float regeldifferenz_alt;
-float erregerstrom_sensor;
-float erregerstrom_soll;
-float erregerstrom_stell;
+float regeldifferenz_alt = 0;
+float erregerstrom_sensor = 0;
+float erregerstrom_soll = 0;
+float erregerstrom_stell = 0;
 float integral_erregerstrom_regelung = 0;
 
 
@@ -70,8 +70,7 @@ void loop_potentiometer(){
   erregerstrom_soll = av_R_poti/1024.0*I_Erregung_MAX;
 }
 
-void loop_pwm_i_erregung(){
-    //dc_pwm = round(av_R_poti/1024.0*100); //calculates analog value to percent    
+void loop_pwm_i_erregung(){   
     dc_pwm = round(erregerstrom_stell/I_Erregung_MAX);
     analogWrite(PWM_ERREGUNG,dc_pwm*255.0/100); // frequ= 980 Hz Value = DC 0...255
     DEBUG_PRINT("DC_PWM= ");DEBUG_PRINT(dc_pwm);DEBUG_PRINTLN(" %");
@@ -109,7 +108,10 @@ void loop_erregerstrom_regelung(){
     
     delta_regeldifferenz = regeldifferenz - regeldifferenz_alt;
     regeldifferenz_alt = regeldifferenz;
+    
     integral += regeldifferenz * delta_t;
+    integral_erregerstrom_regelung = integral;
+
     ableitung = delta_regeldifferenz / delta_t;
 
     regelanteil_p = Erregerstrom_Regelung_KP * regeldifferenz;

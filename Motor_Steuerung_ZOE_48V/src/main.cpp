@@ -7,9 +7,9 @@ void setup() {
   Serial.begin(9600);
   
   init_potentiometer();
-  init_pwm_i_erregung();
   init_strom_sensor();
   init_erregerstrom_regelung();
+  init_pwm_i_erregung();
 }
 
 void loop() {
