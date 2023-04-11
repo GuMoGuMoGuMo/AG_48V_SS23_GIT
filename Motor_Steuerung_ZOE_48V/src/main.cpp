@@ -35,6 +35,12 @@ void init_dac(Adafruit_MCP4725& DAC, int adresse){
   DAC.setVoltage(0,false);
 }
 
+void init_adc(Adafruit_ADS1015& ads){
+  if (!ads.begin()) {
+    Serial.println("Failed to initialize ADC.");
+    while (1);
+  }
+}
 
 // Loop Funktionen
 void loop_erregerstrom_sollwert(){
@@ -85,10 +91,24 @@ void loop_dac(int prozent,Adafruit_MCP4725& DAC){
   DAC.setVoltage(output,false);
 }
 
+void loop_adc(Adafruit_ADS1015& ads){
+  int16_t adc0, adc1, adc2, adc3;
+  float volts0, volts1, volts2, volts3;
+  
+  adc0 = ads.readADC_SingleEnded(0);
+  adc1 = ads.readADC_SingleEnded(1);
+  adc2 = ads.readADC_SingleEnded(2);
+  adc3 = ads.readADC_SingleEnded(3);
+
+  volts0 = ads.computeVolts(adc0);
+  volts1 = ads.computeVolts(adc1);
+  volts2 = ads.computeVolts(adc2);
+  volts3 = ads.computeVolts(adc3);
+}
 // uC Funktionen
 void setup(){
   Serial.begin(9600);
-  init_dac(DAC1,adresse_dac1);
+  init_dac(dac1,adresse_dac1);
   //init_erregerstrom_pwm();
   //init_potentiometer();
   //init_erregerstrom_sensor();
@@ -101,7 +121,7 @@ void setup(){
 }
 
 void loop(){
-  loop_dac(10,DAC1);
+  loop_dac(10,dac1);
   //loop_erregerstrom_sollwert();
   //loop_erregerstrom_sensor();
   //loop_erregerstrom_pid();

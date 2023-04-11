@@ -12,9 +12,12 @@
 #include <Wire.h>
 #include <Adafruit_MCP4725.h>
 
-Adafruit_MCP4725 DAC1;
+Adafruit_MCP4725 dac1;
 int adresse_dac1 = 0x60;
 
+// Analog-Digital Converter ADS1115
+#include <Adafruit_ADS1X15.h>
+Adafruit_ADS1015 ads1;
 
 // Potentiometer
 #define R_POT100 4700 // Ohm
