@@ -30,7 +30,7 @@ void init_messung_u_batt_traktion(){
     // 
 }
 
-void init_dac_(Adafruit_MCP4725& DAC, int adresse){
+void init_dac(Adafruit_MCP4725& DAC, int adresse){
   DAC.begin(adresse);
   DAC.setVoltage(0,false);
 }
