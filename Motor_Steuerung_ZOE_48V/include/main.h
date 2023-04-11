@@ -38,7 +38,7 @@ PID erregerstrom_pid(&erregerstrom_sensor, &erregerstrom_stell, &erregerstrom_so
 // Stromsensor
 #include <ACS712.h> // Stromsensor lib
 
-ACS712  ACS(I_ERREGUNG_SENS, 5.0, 1023, 20); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 20mV/A
+ACS712  ACS(I_ERREGUNG_SENS, 5.0, 1023,66); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 66mV/A
 
 // Filter
 #include <Ewma.h> // exp weighted moving avg filter liv
