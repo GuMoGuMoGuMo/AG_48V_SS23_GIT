@@ -8,6 +8,14 @@
 #define U_POTI A1
 #define U_BATT_TRAKTION A2
 
+// Digital-Analog Converter
+#include <Wire.h>
+#include <Adafruit_MCP4725.h>
+
+Adafruit_MCP4725 DAC1;
+int adresse_dac1 = 0x60;
+
+
 // Potentiometer
 #define R_POT100 4700 // Ohm
 unsigned short av_R_poti;

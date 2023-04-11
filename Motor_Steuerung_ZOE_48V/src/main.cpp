@@ -30,6 +30,11 @@ void init_messung_u_batt_traktion(){
     // 
 }
 
+void init_dac_(Adafruit_MCP4725& DAC, int adresse){
+  DAC.begin(adresse);
+  DAC.setVoltage(0,false);
+}
+
 
 // Loop Funktionen
 void loop_erregerstrom_sollwert(){
@@ -75,24 +80,43 @@ void loop_erregerstrom_pwm(){
   DEBUG_PRINT(">DC_PWM: ");DEBUG_PRINT(dc_pwm);DEBUG_PRINTLN(" %");
 }
 
+void loop_dac(int prozent,Adafruit_MCP4725& DAC){ 
+  uint16_t output = round(prozent/100.0*4096.0);
+  DAC.setVoltage(output,false);
+}
+
+// uC Funktionen
 void setup(){
   Serial.begin(9600);
-  
-  init_erregerstrom_pwm();
-  init_potentiometer();
-  init_erregerstrom_sensor();
-  init_erregerstrom_pid();
+  init_dac_spannung(DAC1,adresse_dac1);
+  //init_erregerstrom_pwm();
+  //init_potentiometer();
+  //init_erregerstrom_sensor();
+  //init_erregerstrom_pid();
 
-  erreger_strom_mov_avg.clear();
+  //erreger_strom_mov_avg.clear();
   
 
   
 }
 
 void loop(){
-  
-  loop_erregerstrom_sollwert();
-  loop_erregerstrom_sensor();
-  loop_erregerstrom_pid();
-  loop_erregerstrom_pwm();
+  set_dac_spannung(10,DAC1);
+  Serial.print("Moin");
+  delay(1000);
+  set_dac_spannung(20,DAC1);
+  delay(1000);
+  set_dac_spannung(30,DAC1);
+  delay(1000);
+  set_dac_spannung(40,DAC1);
+  delay(1000);
+  set_dac_spannung(50,DAC1);
+  delay(1000);
+  set_dac_spannung(60,DAC1);
+  delay(1000);
+  set_dac_spannung(0,DAC1);
+  //loop_erregerstrom_sollwert();
+  //loop_erregerstrom_sensor();
+  //loop_erregerstrom_pid();
+  //loop_erregerstrom_pwm();
 }
