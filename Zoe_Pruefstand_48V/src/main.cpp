@@ -243,6 +243,10 @@ void setup() {
   excitation_current_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.excitation_current_max));
   excitation_current_pid.SetMode(AUTOMATIC);
 
+  motor_control_kelly_pmac.speed_max = SPEED_MAX; // put code here to calculate max speed
+  kelly_pmac_speed_pid.SetOutputLimits(0, double(motor_control_kelly_pmac.speed_max));
+  kelly_pmac_speed_pid.SetMode(AUTOMATIC);
+
   motor_control_kelly_pmac.torque_max = TORQUE_MAX; // put code here to calculate max speed
   kelly_pmac_speed_pid.SetOutputLimits(0, double(motor_control_kelly_pmac.torque_max));
   kelly_pmac_speed_pid.SetMode(AUTOMATIC);
