@@ -249,9 +249,27 @@ void setup() {
 
   
 
-  //init control mode
+  //init motor parameter
   motor_control_dmc_zoe.control_mode = 0; // 0 = speed controlled , 1 = torque controlled
   motor_control_kelly_pmac.control_mode = 1; // 0 = speed controlled , 1 = torque controlled
+
+  motor_control_dmc_zoe.kp_speed=1;
+  motor_control_dmc_zoe.ki_speed=1;
+  motor_control_dmc_zoe.kd_speed=0;
+
+  motor_control_dmc_zoe.kp_torque=1;
+  motor_control_dmc_zoe.ki_torque=1;
+  motor_control_dmc_zoe.kd_torque=0;
+
+  motor_control_kelly_pmac.kp_speed=1;
+  motor_control_kelly_pmac.ki_speed=1;
+  motor_control_kelly_pmac.kd_speed=0;
+
+  motor_control_kelly_pmac.kp_torque=1;
+  motor_control_kelly_pmac.ki_torque=1;
+  motor_control_kelly_pmac.kd_torque=0;
+
+
 
   // create tasks
   /*xTaskCreate(test_bench_task, "Analog Output Task", 100, NULL, 1, NULL);
