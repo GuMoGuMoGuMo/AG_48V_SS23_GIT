@@ -132,17 +132,12 @@ uint16_t read_adc_excitation_current_sensor(uint8_t p) {
 // define objects 
 
 // define a structure
-struct test_bench {
-  int time;
-  int time_t_minus_1;
-  
+struct test_bench {  
   bool mode = 0; // 1:automatik 0:manuell
   bool ready = 0; // 1: ja 0: nein
   bool start; // 1: ja 0: nein
   bool stop; // 1: ja 0: nein
-
-  int start_time;
-  int stop_time;
+  bool measuring_cycle; // 0: deactivated 1:activated
 };
 
 // define a structure
@@ -209,6 +204,31 @@ struct motor_control motor_control_dmc_zoe;
 struct motor_control motor_control_kelly_pmac;
 struct measurement measuring_shaft;
 
+// define send data functions
+
+void send_data_test_bench (test_bench data_struct){
+    char buf[sizeof(data_struct)];
+    memcpy(buf, &data_struct, sizeof(data_struct)); 
+    Serial.write(buf, sizeof(buf));
+}
+
+void send_data_vehicle (vehicle data_struct){
+    char buf[sizeof(data_struct)];
+    memcpy(buf, &data_struct, sizeof(data_struct)); 
+    Serial.write(buf, sizeof(buf));
+}
+
+void send_data_motor_control (motor_control data_struct){
+    char buf[sizeof(data_struct)];
+    memcpy(buf, &data_struct, sizeof(data_struct)); 
+    Serial.write(buf, sizeof(buf));
+}
+
+void send_data_measurement (measurement data_struct){
+    char buf[sizeof(data_struct)];
+    memcpy(buf, &data_struct, sizeof(data_struct)); 
+    Serial.write(buf, sizeof(buf));
+}
 
 // create pid controller
 #include <PID_v1.h> 

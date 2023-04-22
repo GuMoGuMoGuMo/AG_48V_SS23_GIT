@@ -18,7 +18,7 @@ void test_bench_task(test_bench test_bench, motor_control motor_control) {
           Serial.println();
         }
     }
-     
+
     motor_control_dmc_zoe.speed_setpoint = (motor_control_dmc_zoe.throttle_poti_sensor-motor_control_dmc_zoe.brake_poti_sensor)/100.0*motor_control_dmc_zoe.speed_max;
     motor_control_dmc_zoe.exication_current_setpoint = motor_control_dmc_zoe.excitation_current_poti_sensor/100.0*motor_control.excitation_current_max;
     motor_control_kelly_pmac.speed_setpoint = (motor_control_kelly_pmac.throttle_poti_sensor-motor_control_kelly_pmac.brake_poti_sensor)/100.0*motor_control_kelly_pmac.speed_max;
@@ -165,13 +165,43 @@ void measurement_task(measurement measurement) {
 
 void screen_task(motor_control motor_control_dmc_zoe,motor_control motor_control_kelly_pmac ,vehicle vehicle,measurement measurement,test_bench test_bench) {
     // screen_task
+    // Anzeige:
+    // Zoe Prüfstand        
+    // Modus = Automatik/Manuell
+    // Messzyklus = aktiv/ inaktiv
+    // Zeit seit Start Messzyklus 
+    // Controll Modus DMC_ZOE = Torque/Speed
+    // Cotroll Modus KELLY_PMAC = Torque/Speed
+    // Drehzahl = rpm
+    // Drehmoment = N
+    // elektrische Leistung DMC_ZOE = W
+    // mechanische Leistung DMC_ZOE = W
+    // Wirkungsgrad DMC_ZOE =
+    
 }
 
+void touch_task(){
+
+}
+
+void send_data_task(test_bench test_bench, vehicle vehicle, motor_control motor_control_dmc_zoe, motor_control motor_control_kelly_pmac, measurement measurement){
+  if (test_bench.measuring_cycle){
+    Serial.println(String("test_bench.measuring_cycle") + test_bench.measuring_cycle);  
+    send_data_test_bench(zoe_test_bench);
+    send_data_vehicle(power_supply);
+    send_data_motor_control(motor_control_dmc_zoe);
+    send_data_motor_control(motor_control_kelly_pmac);
+    send_data_measurement(measuring_shaft);
+  }
+  else{
+    Serial.println(String("test_bench.measuring_cycle") + test_bench.measuring_cycle);
+  }
+}
 
 // setup function
 void setup() {
   // initialize serial communication
-  Serial.begin(9600);
+  Serial.begin(112500);
 
   // initialize screen
   tft.begin();
