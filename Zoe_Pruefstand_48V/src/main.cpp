@@ -133,6 +133,15 @@ void setup() {
   // initialize serial communication
   Serial.begin(9600);
 
+  // initialize screen
+  tft.begin();
+  tft.setRotation(3);
+  tft.fillScreen(ILI9341_BLACK);
+  tft.drawRGBBitmap(10,10,hs_esslingen_logo_bitmap,HS_ESSLINGEN_LOGO_WIDTH,HS_ESSLINGEN_LOGO_HEIGHT);
+  tft.setCursor(10, 60);
+  tft.setTextSize(10);
+  tft.println(F("AG48V Zoe Prüfstand"));
+  
   // initialize analog output pins
   
   // initialze analog input pins
@@ -184,8 +193,6 @@ void setup() {
     while (1);
   }
   adc_measuring_shaft.setGain(0);
-
-  // initialize LCD screen
 
   // initialize pid controllers
   motor_control_dmc_zoe.speed_max; // put code here to calculate max speed

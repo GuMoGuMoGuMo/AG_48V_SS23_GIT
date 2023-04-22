@@ -57,6 +57,10 @@
 #include <TouchScreen.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ILI9341.h>
+#include "hs_esslingen_logo_bitmap.h"
+
+#define WIDTH  ILI9341_TFTWIDTH
+#define HEIGHT ILI9341_TFTHEIGHT
 
 #define TFT_DC 32
 #define TFT_CS 30
