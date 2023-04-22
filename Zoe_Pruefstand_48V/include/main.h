@@ -10,6 +10,10 @@
 #include <task.h>
 #include <semphr.h>
 
+// define bench limits
+#define TORQUE_MAX 10
+#define SPEED_MAX 500
+
  // define constants
 #define R_EXCITATION_COIL 8.5
 #define L_EXCITATION_COIL 1

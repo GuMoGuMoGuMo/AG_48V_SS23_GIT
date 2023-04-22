@@ -14,6 +14,9 @@ void test_bench_task(test_bench test_bench, motor_control motor_control) {
     // test_bench_task
     if (test_bench.mode) { // mode=1 automatic; mode=0 manual
         // hier code mit tabelle prüfgramm zeit sollmoment solldrezahl
+        while (1){
+          Serial.println();
+        }
     }
     motor_control_dmc_zoe.speed_setpoint = (motor_control_dmc_zoe.throttle_poti_sensor-motor_control_dmc_zoe.brake_poti_sensor)/100.0*motor_control_dmc_zoe.speed_max;
     motor_control_dmc_zoe.exication_current_setpoint = motor_control_dmc_zoe.excitation_current_poti_sensor/100.0*motor_control.excitation_current_max;
@@ -33,8 +36,8 @@ void motor1_control_task(motor_control motor_control, vehicle vehicle) {
     // motor1_control_task
     // calculate max excitation current, torque, speed
     motor_control.excitation_current_max = round(vehicle.battery_voltage/R_EXCITATION_COIL);
-    motor_control.torque_max; // put code here to calculate max torque
-    motor_control.speed_max; // put code here to calculate max speed
+    motor_control.torque_max = TORQUE_MAX; // put code here to calculate max torque
+    motor_control.speed_max = SPEED_MAX; // put code here to calculate max speed
     //read excitation_current
     motor_control.excitation_current_sensor = excitation_current_sensor.mA_DC()/1000.0;
     // read excitation_current_poti
@@ -55,19 +58,17 @@ void motor1_control_task(motor_control motor_control, vehicle vehicle) {
     motor1_speed_pid.Compute();
 
     // set dac gas/brake
-    int prozent = round(abs(motor_control.speed_output)/motor_control.speed_max*100.0); //= calculate percentage of gas/brake applied here;
-    uint16_t output = round(prozent/100.0*4096.0); // Prozent 0..100
+    int percentage = round(abs(motor_control.speed_output)/motor_control.speed_max*100.0); //= calculate percentage of gas/brake applied here;
+    uint16_t output = round(percentage/100.0*4096.0); // percentage 0..100
     if (motor_control.speed_output>=0) {
       dac_gas_dmc.setVoltage(abs(output),false);
       dac_bremse_dmc.setVoltage(0,false);
       motor_control.state_foot_switch = 1;
-      motor_control.state_brake_switch = 0;
     }
     else { // if speed_output <0
       dac_gas_dmc.setVoltage(0,false);
       dac_bremse_dmc.setVoltage(abs(output),false);
       motor_control.state_foot_switch = 1;
-      motor_control.state_brake_switch = 0;
     }
 
     // set foot switch
@@ -78,8 +79,8 @@ void motor2_control_task(motor_control motor_control, vehicle vehicle) {
   // motor2_control_task
     // calculate max excitation current, torque, speed
     motor_control.excitation_current_max = round(vehicle.battery_voltage/R_EXCITATION_COIL);
-    motor_control.torque_max; // put code here to calculate max torque
-    motor_control.speed_max; // put code here to calculate max speed
+    motor_control.torque_max = TORQUE_MAX; // put code here to calculate max torque
+    motor_control.speed_max = SPEED_MAX; // put code here to calculate max speed
   
     //read gas_poti
     motor_control.throttle_poti_sensor = round(analogRead(POTI_THROTTLE_KELLY_PIN)/1024.0*100.0); // 0...100
@@ -90,8 +91,8 @@ void motor2_control_task(motor_control motor_control, vehicle vehicle) {
     motor1_speed_pid.Compute();
 
     // set dac gas/brake
-    int prozent = round(abs(motor_control.speed_output)/motor_control.speed_max*100.0); // calculate percentage of gas/brake applied;
-    uint16_t output = round(prozent/100.0*4096.0); // prozent 0..100
+    int percentage = round(abs(motor_control.speed_output)/motor_control.speed_max*100.0); // calculate percentage of gas/brake applied;
+    uint16_t output = round(percentage/100.0*4096.0); // percentage 0..100
     if (motor_control.speed_output>=0) {
       dac_gas_kelly.setVoltage(abs(output),false);
       dac_bremse_kelly.setVoltage(0,false);
@@ -119,13 +120,9 @@ void measurement_task(measurement measurement) {
   measurement.speed_measuring_shaft_sensor = (adc_measuring_shaft.toVoltage(SPEED_MEASURING_SHAFT_PIN)*((R1_VOLTAGE_DIVIDER_MEASURING_SHAFT+R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)/R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)) * SPEED_MODE_MEASURING_SHAFT; //in rpm 
 }
 
-void screen_task(void *pvParameters) {
+void screen_task(motor_control motor_control1,motor_control motor_control2 ,vehicle vehicle,measurement measurement,test_bench test_bench) {
     // screen_task
-    
-    // print desired current to LCD
-    
 }
-
 
 
 // setup function
@@ -172,7 +169,6 @@ void setup() {
   dac_bremse_kelly.setVoltage(0,true);
 
   // initialize current sensors
-  uint8_t p = BATTERY_CURRENT_SENSOR_PIN;
   battery_current_sensor.setADC(read_adc_battery_current_sensor, 10, 1023);
   battery_current_sensor.autoMidPoint(); 
   excitation_current_sensor.setADC(read_adc_excitation_current_sensor, 10, 1023);
@@ -192,7 +188,7 @@ void setup() {
   adc_measuring_shaft.setGain(0);
 
   // initialize pid controllers
-  motor_control_dmc_zoe.speed_max; // put code here to calculate max speed
+  motor_control_dmc_zoe.speed_max = SPEED_MAX; // put code here to calculate max speed
   motor1_speed_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.speed_max));
   motor1_speed_pid.SetMode(AUTOMATIC);
   
@@ -200,7 +196,7 @@ void setup() {
   excitation_current_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.excitation_current_max));
   excitation_current_pid.SetMode(AUTOMATIC);
 
-  motor_control_kelly_pmac.speed_max; // put code here to calculate max speed
+  motor_control_kelly_pmac.speed_max = SPEED_MAX; // put code here to calculate max speed
   motor2_speed_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.speed_max));
   motor2_speed_pid.SetMode(AUTOMATIC);
 
