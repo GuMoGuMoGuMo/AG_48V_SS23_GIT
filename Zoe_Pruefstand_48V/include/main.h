@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <math.h>
 #include <SPI.h>
+#include <stdint.h>
 
 // include FreeRTOS libs
 #include <Arduino_FreeRTOS.h>
@@ -110,18 +111,14 @@ ACS712 excitation_current_sensor(EXCITATION_CURRENT_SENSOR_ZOE_PIN, U_REF, 1023,
 
 //  wrapper needed for external analogRead()
 //  as casting behavior is undefined between different function signatures.
-uint16_t read_adc_battery_current_sensor(ADS1115 adc) {
-  return adc.readADC(BATTERY_CURRENT_SENSOR_PIN);
-  //  replace with an external ADC call.
-  //  return ADS.readADC(p);
+uint16_t read_adc_battery_current_sensor(uint8_t p) {
+  return adc_vehicle_dmc_zoe.readADC(BATTERY_CURRENT_SENSOR_PIN);
 };
 
 //  wrapper needed for external analogRead()
 //  as casting behavior is undefined between different function signatures.
-uint16_t read_adc_excitation_current_sensor(ADS1115 adc) {
-  return adc.readADC(EXCITATION_CURRENT_SENSOR_ZOE_PIN);
-  //  replace with an external ADC call.
-  //  return ADS.readADC(p);
+uint16_t read_adc_excitation_current_sensor(uint8_t p) {
+  return adc_vehicle_dmc_zoe.readADC(EXCITATION_CURRENT_SENSOR_ZOE_PIN);
 };
 
 
@@ -166,19 +163,14 @@ struct motor_control {
   int excitation_current_poti_sensor_t_minus_1;
 
   double speed_setpoint;
-  double speed_setpoint_t_minus_1;
   double torque_setpoint;
-  double torque_setpoint_t_minus_1;
   double speed_ist;
-  double speed_ist_t_minus_1;
   double torque_ist;
-  double torque_ist_t_minus_1;
 
   double speed_output;
   double torque_output;
   
-  double excitation_current_ist;
-  double excitation_current_ist_t_minus_1;
+  double excitation_current_sensor;
   double excitation_current_output;
   double exication_current_setpoint; 
 
@@ -197,9 +189,7 @@ struct motor_control {
 // define a structure
 struct measurement {
   double torque_measuring_shaft_sensor;
-  double torque_measuring_shaft_sensor_t_minus_1;
   double speed_measuring_shaft_sensor;
-  double speed_measuring_shaft_sensor_t_minus_1;
 };
 
 // create objects
@@ -213,6 +203,5 @@ struct measurement measuring_shaft;
 // create pid controller
 #include <PID_v1.h> 
 PID motor1_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_dmc_zoe.speed_output, &motor_control_dmc_zoe.speed_setpoint, motor_control_dmc_zoe.kp_speed, motor_control_dmc_zoe.ki_speed, motor_control_dmc_zoe.kd_speed, DIRECT);
-PID excitation_current_pid(&motor_control_dmc_zoe.excitation_current_ist, &motor_control_dmc_zoe.excitation_current_output, &motor_control_dmc_zoe.exication_current_setpoint, motor_control_dmc_zoe.kp_excitation_current, motor_control_dmc_zoe.ki_excitation_current, motor_control_dmc_zoe.kd_excitation_current, DIRECT);
+PID excitation_current_pid(&motor_control_dmc_zoe.excitation_current_sensor, &motor_control_dmc_zoe.excitation_current_output, &motor_control_dmc_zoe.exication_current_setpoint, motor_control_dmc_zoe.kp_excitation_current, motor_control_dmc_zoe.ki_excitation_current, motor_control_dmc_zoe.kd_excitation_current, DIRECT);
 PID motor2_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_kelly_pmac.speed_output, &motor_control_kelly_pmac.speed_setpoint, motor_control_kelly_pmac.kp_speed, motor_control_kelly_pmac.ki_speed, motor_control_kelly_pmac.kd_speed, DIRECT);
-

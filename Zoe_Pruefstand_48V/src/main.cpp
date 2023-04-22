@@ -36,7 +36,7 @@ void motor1_control_task(motor_control motor_control, vehicle vehicle) {
     motor_control.torque_max; // put code here to calculate max torque
     motor_control.speed_max; // put code here to calculate max speed
     //read excitation_current
-    motor_control.excitation_current_ist = excitation_current_sensor.mA_DC()/1000.0;
+    motor_control.excitation_current_sensor = excitation_current_sensor.mA_DC()/1000.0;
     // read excitation_current_poti
     motor_control.excitation_current_poti_sensor = round(analogRead(EXCITATION_CURRENT_POTI_ZOE_PIN)/1024.0*100.0);
     //read gas_poti
@@ -142,8 +142,6 @@ void setup() {
   tft.setTextSize(10);
   tft.println(F("AG48V Zoe Prüfstand"));
   
-  // initialize analog output pins
-  
   // initialze analog input pins
   pinMode(EXCITATION_CURRENT_POTI_ZOE_PIN,INPUT);
   pinMode(POTI_THROTTLE_DMC_PIN,INPUT);
@@ -162,26 +160,25 @@ void setup() {
   pinMode(BRAKE_SWITCH_KELLY_PIN,OUTPUT);
   digitalWrite(BRAKE_SWITCH_KELLY_PIN, LOW); 
 
-  // initialize dacs
+  // initialize digital analog converters
   dac_gas_dmc.begin(ADRESS_DAC_gas_dmc);
   dac_bremse_dmc.begin(ADRESS_DAC_bremse_dmc);
   dac_gas_kelly.begin(ADRESS_DAC_gas_kelly);
   dac_bremse_kelly.begin(ADRESS_DAC_bremse_kelly);
 
-  dac_gas_dmc.setVoltage(0,false);
-  dac_bremse_dmc.setVoltage(0,false);
-  dac_gas_kelly.setVoltage(0,false);
-  dac_bremse_kelly.setVoltage(0,false);
-
-
+  dac_gas_dmc.setVoltage(0,true);
+  dac_bremse_dmc.setVoltage(0,true);
+  dac_gas_kelly.setVoltage(0,true);
+  dac_bremse_kelly.setVoltage(0,true);
 
   // initialize current sensors
+  uint8_t p = BATTERY_CURRENT_SENSOR_PIN;
   battery_current_sensor.setADC(read_adc_battery_current_sensor, 10, 1023);
   battery_current_sensor.autoMidPoint(); 
   excitation_current_sensor.setADC(read_adc_excitation_current_sensor, 10, 1023);
   excitation_current_sensor.autoMidPoint();
 
-  // initialize adcs
+  // initialize analog digital converters
   if (!adc_vehicle_dmc_zoe.begin()) {
     Serial.println("Failed to initialize adc_vehicle_dmc_zoe.");
     while (1);
@@ -208,7 +205,7 @@ void setup() {
   motor2_speed_pid.SetMode(AUTOMATIC);
 
   // create tasks
-  xTaskCreate(test_bench_task, "Analog Output Task", 100, NULL, 1, NULL);
+  /*xTaskCreate(test_bench_task, "Analog Output Task", 100, NULL, 1, NULL);
   xTaskCreate(vehicle_task, "Screen Task", 100, NULL, 1, NULL);
   xTaskCreate(motor1_control_task, "Control Task", 100, NULL, 1, NULL);
   xTaskCreate(motor2_control_task, "Control Task", 100, NULL, 1, NULL);
@@ -216,6 +213,7 @@ void setup() {
   xTaskCreate(screen_task, "Control Task", 100, NULL, 1, NULL);
   // start scheduler
   vTaskStartScheduler();
+  */
 }
 
 // loop function (not used)
