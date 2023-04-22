@@ -18,6 +18,7 @@ void test_bench_task(test_bench test_bench, motor_control motor_control) {
           Serial.println();
         }
     }
+     
     motor_control_dmc_zoe.speed_setpoint = (motor_control_dmc_zoe.throttle_poti_sensor-motor_control_dmc_zoe.brake_poti_sensor)/100.0*motor_control_dmc_zoe.speed_max;
     motor_control_dmc_zoe.exication_current_setpoint = motor_control_dmc_zoe.excitation_current_poti_sensor/100.0*motor_control.excitation_current_max;
     motor_control_kelly_pmac.speed_setpoint = (motor_control_kelly_pmac.throttle_poti_sensor-motor_control_kelly_pmac.brake_poti_sensor)/100.0*motor_control_kelly_pmac.speed_max;
@@ -32,84 +33,126 @@ void vehicle_task(vehicle vehicle) {
 
 }
 
-void motor1_control_task(motor_control motor_control, vehicle vehicle) {
-    // motor1_control_task
+void dmc_zoe_control_task(motor_control motor_control_dmc_zoe, vehicle vehicle) {
+    // dmc_zoe_control_task
     // calculate max excitation current, torque, speed
-    motor_control.excitation_current_max = round(vehicle.battery_voltage/R_EXCITATION_COIL);
-    motor_control.torque_max = TORQUE_MAX; // put code here to calculate max torque
-    motor_control.speed_max = SPEED_MAX; // put code here to calculate max speed
+    motor_control_dmc_zoe.excitation_current_max = round(vehicle.battery_voltage/R_EXCITATION_COIL);
+    motor_control_dmc_zoe.torque_max = TORQUE_MAX; // put code here to calculate max torque
+    motor_control_dmc_zoe.speed_max = SPEED_MAX; // put code here to calculate max speed
+    
     //read excitation_current
-    motor_control.excitation_current_sensor = excitation_current_sensor.mA_DC()/1000.0;
+    motor_control_dmc_zoe.excitation_current_sensor = excitation_current_sensor.mA_DC()/1000.0;
+    
     // read excitation_current_poti
-    motor_control.excitation_current_poti_sensor = round(analogRead(EXCITATION_CURRENT_POTI_ZOE_PIN)/1024.0*100.0);
+    motor_control_dmc_zoe.excitation_current_poti_sensor = round(analogRead(EXCITATION_CURRENT_POTI_ZOE_PIN)/1024.0*100.0);
     //read gas_poti
-    motor_control.throttle_poti_sensor = round(analogRead(POTI_THROTTLE_DMC_PIN)/1024.0*100.0); // 0...100
+    motor_control_dmc_zoe.throttle_poti_sensor = round(analogRead(POTI_THROTTLE_DMC_PIN)/1024.0*100.0); // 0...100
     //read bremse_poti
-    motor_control.brake_poti_sensor = round(analogRead(POTI_BRAKE_DMC_PIN)/1024.0*100.0); // 0...100
+    motor_control_dmc_zoe.brake_poti_sensor = round(analogRead(POTI_BRAKE_DMC_PIN)/1024.0*100.0); // 0...100
     
 
     // pid excitation_current
     excitation_current_pid.Compute();
     // set pwm excitation_current
-    int dc_pwm = round((constrain(motor_control.excitation_current_output/motor_control.excitation_current_max,0,1)*100.0));
+    int dc_pwm = round((constrain(motor_control_dmc_zoe.excitation_current_output/motor_control_dmc_zoe.excitation_current_max,0,1)*100.0));
     analogWrite(PWM_ERREGUNG_ZOE_PIN,round(dc_pwm/100.0*255.0)); // frequ= 980 Hz Value = DC 0...255
-    
-    // pid motor speed
-    motor1_speed_pid.Compute();
 
-    // set dac gas/brake
-    int percentage = round(abs(motor_control.speed_output)/motor_control.speed_max*100.0); //= calculate percentage of gas/brake applied here;
-    uint16_t output = round(percentage/100.0*4096.0); // percentage 0..100
-    if (motor_control.speed_output>=0) {
-      dac_gas_dmc.setVoltage(abs(output),false);
-      dac_bremse_dmc.setVoltage(0,false);
-      motor_control.state_foot_switch = 1;
-    }
-    else { // if speed_output <0
-      dac_gas_dmc.setVoltage(0,false);
-      dac_bremse_dmc.setVoltage(abs(output),false);
-      motor_control.state_foot_switch = 1;
-    }
 
+    int percentage;
+    if (motor_control_dmc_zoe.control_mode){// 0 = speed controlled , 1 = torque controlled
+      dmc_zoe_torque_pid.Compute();
+      percentage = round(abs(motor_control_dmc_zoe.torque_output)/motor_control_dmc_zoe.torque_max*100.0); //calculate percentage of gas/brake applied here;
+
+      // set dac gas/brake
+      uint16_t output = round(percentage/100.0*4096.0); // percentage 0..100
+      if (motor_control_dmc_zoe.torque_output>=0) {
+        dac_gas_dmc.setVoltage(abs(output),false);
+        dac_bremse_dmc.setVoltage(0,false);
+        motor_control_dmc_zoe.state_foot_switch = 1;
+      }
+      else { // if torque_output <0
+        dac_gas_dmc.setVoltage(0,false);
+        dac_bremse_dmc.setVoltage(abs(output),false);
+        motor_control_dmc_zoe.state_foot_switch = 0;
+      }
+    } 
+    else {
+      // pid motor speed
+      dmc_zoe_speed_pid.Compute();
+      percentage = round(abs(motor_control_dmc_zoe.speed_output)/motor_control_dmc_zoe.speed_max*100.0); //calculate percentage of gas/brake applied here;
+
+      // set dac gas/brake
+      uint16_t output = round(percentage/100.0*4096.0); // percentage 0..100
+      if (motor_control_dmc_zoe.speed_output>=0) {
+        dac_gas_dmc.setVoltage(abs(output),false);
+        dac_bremse_dmc.setVoltage(0,false);
+        motor_control_dmc_zoe.state_foot_switch = 1;
+      }
+      else { // if speed_output <0
+        dac_gas_dmc.setVoltage(0,false);
+        dac_bremse_dmc.setVoltage(abs(output),false);
+        motor_control_dmc_zoe.state_foot_switch = 0;
+      } 
+    }  
+   
     // set foot switch
-    digitalWrite(FOOT_SWITCH_DMC_PIN,motor_control.state_foot_switch);
+    digitalWrite(FOOT_SWITCH_DMC_PIN,motor_control_dmc_zoe.state_foot_switch);
 }
 
-void motor2_control_task(motor_control motor_control, vehicle vehicle) {
-  // motor2_control_task
+void kelly_pmac_control_task(motor_control motor_control_kelly_pmac, vehicle vehicle) {
+  // kelly_pmac_control_task
     // calculate max excitation current, torque, speed
-    motor_control.excitation_current_max = round(vehicle.battery_voltage/R_EXCITATION_COIL);
-    motor_control.torque_max = TORQUE_MAX; // put code here to calculate max torque
-    motor_control.speed_max = SPEED_MAX; // put code here to calculate max speed
+    motor_control_kelly_pmac.excitation_current_max = round(vehicle.battery_voltage/R_EXCITATION_COIL);
+    motor_control_kelly_pmac.torque_max = TORQUE_MAX; // put code here to calculate max torque
+    motor_control_kelly_pmac.speed_max = SPEED_MAX; // put code here to calculate max speed
   
     //read gas_poti
-    motor_control.throttle_poti_sensor = round(analogRead(POTI_THROTTLE_KELLY_PIN)/1024.0*100.0); // 0...100
+    motor_control_kelly_pmac.throttle_poti_sensor = round(analogRead(POTI_THROTTLE_KELLY_PIN)/1024.0*100.0); // 0...100
     //read bremse_poti
-    motor_control.brake_poti_sensor = round(analogRead(POTI_BRAKE_KELLY_PIN)/1024.0*100.0); // 0...100
+    motor_control_kelly_pmac.brake_poti_sensor = round(analogRead(POTI_BRAKE_KELLY_PIN)/1024.0*100.0); // 0...100
     
-    // pid motor speed
-    motor1_speed_pid.Compute();
+    int percentage;
+    if (motor_control_kelly_pmac.control_mode){// 0 = speed controlled , 1 = torque controlled
+      dmc_zoe_torque_pid.Compute();
+      percentage = round(abs(motor_control_kelly_pmac.torque_output)/motor_control_kelly_pmac.torque_max*100.0); //calculate percentage of gas/brake applied here;
 
-    // set dac gas/brake
-    int percentage = round(abs(motor_control.speed_output)/motor_control.speed_max*100.0); // calculate percentage of gas/brake applied;
-    uint16_t output = round(percentage/100.0*4096.0); // percentage 0..100
-    if (motor_control.speed_output>=0) {
-      dac_gas_kelly.setVoltage(abs(output),false);
-      dac_bremse_kelly.setVoltage(0,false);
-      motor_control.state_foot_switch = 1;
-      motor_control.state_brake_switch = 0;
-    }
-    else { // if speed_output <0
-      dac_gas_kelly.setVoltage(0,false);
-      dac_bremse_kelly.setVoltage(abs(output),false);
-      motor_control.state_foot_switch = 0;
-      motor_control.state_brake_switch = 1;
-    }
+      // set dac gas/brake
+      uint16_t output = round(percentage/100.0*4096.0); // percentage 0..100
+      if (motor_control_kelly_pmac.torque_output>=0) {
+        dac_gas_kelly.setVoltage(abs(output),false);
+        dac_bremse_kelly.setVoltage(0,false);
+        motor_control_kelly_pmac.state_foot_switch = 1;
+      }
+      else { // if torque_output <0
+        dac_gas_kelly.setVoltage(0,false);
+        dac_bremse_kelly.setVoltage(abs(output),false);
+        motor_control_kelly_pmac.state_foot_switch = 0;
+      }
+    } 
+    else {
+      // pid motor speed
+      dmc_zoe_speed_pid.Compute();
+      percentage = round(abs(motor_control_kelly_pmac.speed_output)/motor_control_kelly_pmac.speed_max*100.0); //calculate percentage of gas/brake applied here;
 
+      // set dac gas/brake
+      uint16_t output = round(percentage/100.0*4096.0); // percentage 0..100
+      if (motor_control_kelly_pmac.speed_output>=0) {
+        dac_gas_kelly.setVoltage(abs(output),false);
+        dac_bremse_kelly.setVoltage(0,false);
+        motor_control_kelly_pmac.state_foot_switch = 1;
+        motor_control_kelly_pmac.state_brake_switch = 0;
+      }
+      else { // if speed_output <0
+        dac_gas_dmc.setVoltage(0,false);
+        dac_bremse_dmc.setVoltage(abs(output),false);
+        motor_control_kelly_pmac.state_foot_switch = 0;
+        motor_control_kelly_pmac.state_brake_switch = 1;
+      } 
+    }  
     // set foot switch
-    digitalWrite(FOOT_SWITCH_KELLY_PIN,motor_control.state_foot_switch);
+    digitalWrite(FOOT_SWITCH_KELLY_PIN,motor_control_kelly_pmac.state_foot_switch);
     // set brake switch
-    digitalWrite(BRAKE_SWITCH_KELLY_PIN,motor_control.state_brake_switch);
+    digitalWrite(BRAKE_SWITCH_KELLY_PIN,motor_control_kelly_pmac.state_brake_switch);
 }
 
 void measurement_task(measurement measurement) {
@@ -120,7 +163,7 @@ void measurement_task(measurement measurement) {
   measurement.speed_measuring_shaft_sensor = (adc_measuring_shaft.toVoltage(SPEED_MEASURING_SHAFT_PIN)*((R1_VOLTAGE_DIVIDER_MEASURING_SHAFT+R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)/R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)) * SPEED_MODE_MEASURING_SHAFT; //in rpm 
 }
 
-void screen_task(motor_control motor_control1,motor_control motor_control2 ,vehicle vehicle,measurement measurement,test_bench test_bench) {
+void screen_task(motor_control motor_control_dmc_zoe,motor_control motor_control_kelly_pmac ,vehicle vehicle,measurement measurement,test_bench test_bench) {
     // screen_task
 }
 
@@ -189,22 +232,32 @@ void setup() {
 
   // initialize pid controllers
   motor_control_dmc_zoe.speed_max = SPEED_MAX; // put code here to calculate max speed
-  motor1_speed_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.speed_max));
-  motor1_speed_pid.SetMode(AUTOMATIC);
-  
+  dmc_zoe_speed_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.speed_max));
+  dmc_zoe_speed_pid.SetMode(AUTOMATIC);
+   
+  motor_control_dmc_zoe.torque_max = TORQUE_MAX; // put code here to calculate max speed
+  dmc_zoe_speed_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.torque_max));
+  dmc_zoe_speed_pid.SetMode(AUTOMATIC);
+
   motor_control_dmc_zoe.excitation_current_max = round(power_supply.battery_voltage/R_EXCITATION_COIL);
   excitation_current_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.excitation_current_max));
   excitation_current_pid.SetMode(AUTOMATIC);
 
-  motor_control_kelly_pmac.speed_max = SPEED_MAX; // put code here to calculate max speed
-  motor2_speed_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.speed_max));
-  motor2_speed_pid.SetMode(AUTOMATIC);
+  motor_control_kelly_pmac.torque_max = TORQUE_MAX; // put code here to calculate max speed
+  kelly_pmac_speed_pid.SetOutputLimits(0, double(motor_control_kelly_pmac.torque_max));
+  kelly_pmac_speed_pid.SetMode(AUTOMATIC);
+
+  
+
+  //init control mode
+  motor_control_dmc_zoe.control_mode = 0; // 0 = speed controlled , 1 = torque controlled
+  motor_control_kelly_pmac.control_mode = 1; // 0 = speed controlled , 1 = torque controlled
 
   // create tasks
   /*xTaskCreate(test_bench_task, "Analog Output Task", 100, NULL, 1, NULL);
   xTaskCreate(vehicle_task, "Screen Task", 100, NULL, 1, NULL);
-  xTaskCreate(motor1_control_task, "Control Task", 100, NULL, 1, NULL);
-  xTaskCreate(motor2_control_task, "Control Task", 100, NULL, 1, NULL);
+  xTaskCreate(dmc_zoe_control_task, "Control Task", 100, NULL, 1, NULL);
+  xTaskCreate(kelly_pmac_control_task, "Control Task", 100, NULL, 1, NULL);
   xTaskCreate(measurement_task, "Control Task", 100, NULL, 1, NULL);
   xTaskCreate(screen_task, "Control Task", 100, NULL, 1, NULL);
   // start scheduler
