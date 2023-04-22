@@ -139,6 +139,8 @@ struct test_bench {
   bool mode = 0; // 1:automatik 0:manuell
   bool ready = 0; // 1: ja 0: nein
   bool start; // 1: ja 0: nein
+  uint16_t measuring_cycle_start_time;
+  int time_step;
   bool stop; // 1: ja 0: nein
   bool measuring_cycle; // 0: deactivated 1:activated
 };

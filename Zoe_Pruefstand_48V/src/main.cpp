@@ -10,13 +10,31 @@ void sensor_task(void *pvParameters) {
 }
 */
 
-void test_bench_task(test_bench test_bench, motor_control motor_control) {
+void test_bench_task(test_bench test_bench, motor_control motor_control,measuring_cycle_1 active_measuring_cycle) {
     // test_bench_task
     if (test_bench.mode) { // mode=1 automatic; mode=0 manual
-        // hier code mit tabelle prüfgramm zeit sollmoment solldrezahl
-        while (1){
-          Serial.println();
+      if (test_bench.ready) {
+        if(test_bench.start) {
+          // hier code mit tabelle prüfgramm zeit sollmoment solldrezahl
+          test_bench.measuring_cycle = 1;
+          test_bench.measuring_cycle_start_time = millis()/1000;
+          test_bench.start = 0;
+          test_bench.time_step = 0;
         }
+      }
+      if (test_bench.time_step > active_measuring_cycle.size_time){
+        test_bench.measuring_cycle = 0;
+        test_bench.ready = 0;
+      }
+      else {
+        if (test_bench.measuring_cycle_start_time<active_measuring_cycle.time[test_bench.time_step]){
+
+        }
+        else{
+          test_bench.time_step++;
+        }
+      }
+    
     }
 
     motor_control_dmc_zoe.speed_setpoint = (motor_control_dmc_zoe.throttle_poti_sensor-motor_control_dmc_zoe.brake_poti_sensor)/100.0*motor_control_dmc_zoe.speed_max;
