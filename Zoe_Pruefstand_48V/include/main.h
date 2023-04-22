@@ -5,6 +5,9 @@
 #include <SPI.h>
 #include <stdint.h>
 
+//#include measuring cycles
+#include "measuring_cycles.h"
+
 // include FreeRTOS libs
 #include <Arduino_FreeRTOS.h>
 #include <task.h>
