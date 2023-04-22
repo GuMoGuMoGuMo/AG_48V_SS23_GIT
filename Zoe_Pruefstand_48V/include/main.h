@@ -13,8 +13,24 @@
 #define R_EXCITATION_COIL 8.5
 #define L_EXCITATION_COIL 1
 #define U_REF 5
-#define R1_VOLTAGE_DIVIDER 100000
-#define R2_VOLTAGE_DIVIDER 5600
+#define R1_VOLTAGE_DIVIDER_U_BATT 100000
+#define R2_VOLTAGE_DIVIDER_U_BATT 5600
+
+// define measuring shaft constants
+#define SPEED_MODE_MEASURING_SHAFT 100
+#define R1_VOLTAGE_DIVIDER_MEASURING_SHAFT 21.56e03
+#define R2_VOLTAGE_DIVIDER_MEASURING_SHAFT 21.37e03
+
+#define R1_LM358_OP_AMP 11.9e03
+#define R2_LM358_OP_AMP 11.75e03
+#define R3_LM358_OP_AMP 3.24e03
+#define R4_LM358_OP_AMP 3.29e03
+
+#define TORQUE_OFFSET 1.92
+#define U_SUPPLY_MEASURING_CIRCUIT 9.9
+#define deltaM 10 //delta M in Nm/V
+
+
 
 // define Analog/Digital Pins
 #define EXCITATION_CURRENT_POTI_ZOE_PIN A0
@@ -67,9 +83,8 @@ ADS1115 adc_measuring_shaft(ADRESS_ADC_MEASURING_SHAFT_ZOE);
 #define EXCITATION_CURRENT_SENSOR_ZOE_PIN 3
 
 // define analog-digital converter DMC measuring shaft PINS
- #define TORQUE_MEASURING_SHAFT_PIN 2
- #define SPEED_MEASURING_SHAFT_PIN 3
-
+ #define TORQUE_MEASURING_SHAFT_PIN 1
+ #define SPEED_MEASURING_SHAFT_PIN 0
 
 // define digital-analog converters
 #include <Adafruit_MCP4725.h>
@@ -177,10 +192,10 @@ struct motor_control {
 
 // define a structure
 struct measurement {
-  double torque_messwelle_sensor;
-  double torque_messwelle_sensor_t_minus_1;
-  double drehzahl_messwelle_sensor;
-  double drehzahl_messwelle_sensor_t_minus_1;
+  double torque_measuring_shaft_sensor;
+  double torque_measuring_shaft_sensor_t_minus_1;
+  double speed_measuring_shaft_sensor;
+  double speed_measuring_shaft_sensor_t_minus_1;
 };
 
 // create objects
@@ -193,7 +208,7 @@ struct measurement measuring_shaft;
 
 // create pid controller
 #include <PID_v1.h> 
-PID motor1_speed_pid(&measuring_shaft.drehzahl_messwelle_sensor, &motor_control_dmc_zoe.speed_output, &motor_control_dmc_zoe.speed_setpoint, motor_control_dmc_zoe.kp_speed, motor_control_dmc_zoe.ki_speed, motor_control_dmc_zoe.kd_speed, DIRECT);
+PID motor1_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_dmc_zoe.speed_output, &motor_control_dmc_zoe.speed_setpoint, motor_control_dmc_zoe.kp_speed, motor_control_dmc_zoe.ki_speed, motor_control_dmc_zoe.kd_speed, DIRECT);
 PID excitation_current_pid(&motor_control_dmc_zoe.excitation_current_ist, &motor_control_dmc_zoe.excitation_current_output, &motor_control_dmc_zoe.exication_current_setpoint, motor_control_dmc_zoe.kp_excitation_current, motor_control_dmc_zoe.ki_excitation_current, motor_control_dmc_zoe.kd_excitation_current, DIRECT);
-PID motor2_speed_pid(&measuring_shaft.drehzahl_messwelle_sensor, &motor_control_kelly_pmac.speed_output, &motor_control_kelly_pmac.speed_setpoint, motor_control_kelly_pmac.kp_speed, motor_control_kelly_pmac.ki_speed, motor_control_kelly_pmac.kd_speed, DIRECT);
+PID motor2_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_kelly_pmac.speed_output, &motor_control_kelly_pmac.speed_setpoint, motor_control_kelly_pmac.kp_speed, motor_control_kelly_pmac.ki_speed, motor_control_kelly_pmac.kd_speed, DIRECT);
 

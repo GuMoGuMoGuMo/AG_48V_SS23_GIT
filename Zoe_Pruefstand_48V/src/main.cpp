@@ -23,7 +23,7 @@ void test_bench_task(test_bench test_bench, motor_control motor_control) {
 void vehicle_task(vehicle vehicle) {
   // vehicle_task
   //read battery_voltage_pin
-  vehicle.battery_voltage = adc_vehicle_dmc_zoe.readADC(BATTERY_VOLTAGE_SENSOR_PIN)*adc_vehicle_dmc_zoe.toVoltage(1)*(R2_VOLTAGE_DIVIDER+R1_VOLTAGE_DIVIDER)/R2_VOLTAGE_DIVIDER;
+  vehicle.battery_voltage = adc_vehicle_dmc_zoe.readADC(BATTERY_VOLTAGE_SENSOR_PIN)*adc_vehicle_dmc_zoe.toVoltage(1)*(R2_VOLTAGE_DIVIDER_U_BATT+R1_VOLTAGE_DIVIDER_U_BATT)/R2_VOLTAGE_DIVIDER_U_BATT;
   // read battery_current_pin
   vehicle.battery_current = battery_current_sensor.mA_DC()/1000.0;
 
@@ -111,13 +111,12 @@ void motor2_control_task(motor_control motor_control, vehicle vehicle) {
     digitalWrite(BRAKE_SWITCH_KELLY_PIN,motor_control.state_brake_switch);
 }
 
-void measurement_task(void *pvParameters) {
+void measurement_task(measurement measurement) {
     // measurement_task
-    
     // read torque
-
+  measurement.torque_measuring_shaft_sensor = ((adc_measuring_shaft.toVoltage(TORQUE_MEASURING_SHAFT_PIN) - U_SUPPLY_MEASURING_CIRCUIT * (1+R3_LM358_OP_AMP/R1_LM358_OP_AMP) * R4_LM358_OP_AMP/(R4_LM358_OP_AMP+R2_LM358_OP_AMP))* (-R1_LM358_OP_AMP/R3_LM358_OP_AMP)) * deltaM - TORQUE_OFFSET;
     // read speed
-  
+  measurement.speed_measuring_shaft_sensor = (adc_measuring_shaft.toVoltage(SPEED_MEASURING_SHAFT_PIN)*((R1_VOLTAGE_DIVIDER_MEASURING_SHAFT+R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)/R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)) * SPEED_MODE_MEASURING_SHAFT; //in rpm 
 }
 
 void screen_task(void *pvParameters) {
