@@ -2,44 +2,51 @@
 
 
 // define tasks
-/*
-void sensor_task(void *pvParameters) {
-    // read sensor value
-    
-    vTaskDelay(10); // wait for 10 ms
-}
-*/
-
-void test_bench_task(test_bench test_bench, motor_control motor_control,measuring_cycle_1 active_measuring_cycle) {
-    // test_bench_task
-    if (test_bench.mode) { // mode=1 automatic; mode=0 manual
-      if (test_bench.ready) {
-        if(test_bench.start) {
-          // hier code mit tabelle prüfgramm zeit sollmoment solldrezahl
-          test_bench.measuring_cycle = 1;
-          test_bench.measuring_cycle_start_time = millis()/1000;
-          test_bench.start = 0;
-          test_bench.time_step = 0;
-        }
+void test_bench_task(test_bench test_bench, motor_control motor_control, measuring_cycle measuring_cycle_struct[MEASURING_CYCLE_TABLE_SIZE]) {
+  // test_bench_task
+  if (test_bench.mode) { // mode=1 automatic; mode=0 manual
+    if (test_bench.ready) {
+      if(test_bench.start) {
+        test_bench.measuring_cycle = 1;
+        test_bench.measuring_cycle_start_time = millis()/1000;
+        test_bench.ready = 0;
+        test_bench.start = 0;
       }
-      if (test_bench.time_step > active_measuring_cycle.size_time){
+    }
+    if (test_bench.measuring_cycle){
+      int i;
+      // Search for the table entry with the next smaller time
+      i = MEASURING_CYCLE_TABLE_SIZE - 1;
+      while (i >= 0 && measuring_cycle_struct[i].time > ((millis()/1000)-test_bench.measuring_cycle_start_time)) {
+        i--;
+      }
+      // write the setpoints for rpm and torque
+      if (i >= 0) {
+        motor_control_dmc_zoe.speed_setpoint = measuring_cycle_struct[i].rpm;
+        motor_control_kelly_pmac.speed_setpoint = measuring_cycle_struct[i].rpm;
+        motor_control_dmc_zoe.torque_setpoint = measuring_cycle_struct[i].torque;
+        motor_control_kelly_pmac.torque_setpoint = measuring_cycle_struct[i].torque;
+      } else {
         test_bench.measuring_cycle = 0;
         test_bench.ready = 0;
       }
-      else {
-        if (test_bench.measuring_cycle_start_time<active_measuring_cycle.time[test_bench.time_step]){
-
-        }
-        else{
-          test_bench.time_step++;
-        }
-      }
     }
-    else {
+    if(test_bench.stop){
+      test_bench.stop = 0;
+      test_bench.measuring_cycle = 0;
+      motor_control_dmc_zoe.speed_setpoint = 0;
+      motor_control_kelly_pmac.speed_setpoint = 0;
+      motor_control_dmc_zoe.torque_setpoint = 0;
+      motor_control_kelly_pmac.torque_setpoint =0;
+    }
+  }  
+  else {
     motor_control_dmc_zoe.speed_setpoint = (motor_control_dmc_zoe.throttle_poti_sensor-motor_control_dmc_zoe.brake_poti_sensor)/100.0*motor_control_dmc_zoe.speed_max;
+    motor_control_dmc_zoe.torque_setpoint = (motor_control_dmc_zoe.throttle_poti_sensor-motor_control_dmc_zoe.brake_poti_sensor)/100.0*motor_control_dmc_zoe.torque_max;
     motor_control_dmc_zoe.exication_current_setpoint = motor_control_dmc_zoe.excitation_current_poti_sensor/100.0*motor_control.excitation_current_max;
     motor_control_kelly_pmac.speed_setpoint = (motor_control_kelly_pmac.throttle_poti_sensor-motor_control_kelly_pmac.brake_poti_sensor)/100.0*motor_control_kelly_pmac.speed_max;
-    }
+    motor_control_kelly_pmac.torque_setpoint = (motor_control_kelly_pmac.throttle_poti_sensor-motor_control_kelly_pmac.brake_poti_sensor)/100.0*motor_control_kelly_pmac.torque_max;
+  }
 }
 
 void vehicle_task(vehicle vehicle) {
