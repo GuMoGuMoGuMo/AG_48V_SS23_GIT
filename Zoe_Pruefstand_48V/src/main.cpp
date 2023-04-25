@@ -54,7 +54,7 @@ void vehicle_task(vehicle vehicle) {
   //read battery_voltage_pin
   vehicle.battery_voltage = adc_vehicle_dmc_zoe.readADC(BATTERY_VOLTAGE_SENSOR_PIN)*adc_vehicle_dmc_zoe.toVoltage(1)*(R2_VOLTAGE_DIVIDER_U_BATT+R1_VOLTAGE_DIVIDER_U_BATT)/R2_VOLTAGE_DIVIDER_U_BATT;
   // read battery_current_pin
-  vehicle.battery_current = battery_current_sensor.mA_DC()/1000.0;
+  vehicle.battery_current = (battery_current_sensor_1.mA_DC()+battery_current_sensor_2.mA_DC())/1000.0;
 
 }
 
@@ -298,8 +298,10 @@ void setup() {
   dac_bremse_kelly.setVoltage(0,true);
 
   // initialize current sensors
-  battery_current_sensor.setADC(read_adc_battery_current_sensor, 10, 1023);
-  battery_current_sensor.autoMidPoint(); 
+  battery_current_sensor_1.setADC(read_adc_battery_current_sensor_1, 10, 1023);
+  battery_current_sensor_1.autoMidPoint(); 
+  battery_current_sensor_2.setADC(read_adc_battery_current_sensor_2, 10, 1023);
+  battery_current_sensor_2.autoMidPoint(); 
   excitation_current_sensor.setADC(read_adc_excitation_current_sensor, 10, 1023);
   excitation_current_sensor.autoMidPoint();
 
