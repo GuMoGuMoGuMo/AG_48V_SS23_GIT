@@ -223,12 +223,16 @@ void send_data_test_bench (test_bench test_bench){
                 test_bench.stop + String(" ") + \
                 test_bench.measuring_cycle + String(" ") + \
                 test_bench.measuring_cycle_start_time);
+    Serial.write(13);
+    Serial.write(10);
 }
 
 void send_data_vehicle (vehicle vehicle){
     Serial.print(String("vh ") + \
                 vehicle.battery_current + String(" ") + \
                 vehicle.battery_voltage);
+    Serial.write(13);
+    Serial.write(10);
 }
 
 void send_data_motor_control_dmc_zoe (motor_control motor_control){
@@ -260,6 +264,8 @@ void send_data_motor_control_dmc_zoe (motor_control motor_control){
                 motor_control.kd_excitation_current + String("") + \
                 motor_control.state_foot_switch + String("") + \
                 motor_control.state_brake_switch);
+    Serial.write(13);
+    Serial.write(10);
 }
 
 void send_data_motor_control_kelly_pmac (motor_control motor_control){
@@ -291,12 +297,16 @@ void send_data_motor_control_kelly_pmac (motor_control motor_control){
                 motor_control.kd_excitation_current + String("") + \
                 motor_control.state_foot_switch + String("") + \
                 motor_control.state_brake_switch);
+    Serial.write(13);
+    Serial.write(10);
 }
 
 void send_data_measurement (measurement measurement){
     Serial.print(String("msr ") + \
                 measurement.torque_measuring_shaft_sensor + String(" ") + \
                 measurement.speed_measuring_shaft_sensor);
+    Serial.write(13);
+    Serial.write(10);
 }
 
 // create pid controller
