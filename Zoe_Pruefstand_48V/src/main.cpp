@@ -58,7 +58,7 @@ void vehicle_task(vehicle vehicle) {
 
 void dmc_zoe_control_task(motor_control motor_control_dmc_zoe, vehicle vehicle) {
     // dmc_zoe_control_task
-    // calculate max excitation current, torque, speed
+    // calculate/set max excitation current, torque, speed
     motor_control_dmc_zoe.excitation_current_max = round(vehicle.battery_voltage/R_EXCITATION_COIL);
     motor_control_dmc_zoe.torque_max = TORQUE_MAX; // put code here to calculate max torque
     motor_control_dmc_zoe.speed_max = SPEED_MAX; // put code here to calculate max speed
@@ -124,8 +124,7 @@ void dmc_zoe_control_task(motor_control motor_control_dmc_zoe, vehicle vehicle) 
 
 void kelly_pmac_control_task(motor_control motor_control_kelly_pmac, vehicle vehicle) {
   // kelly_pmac_control_task
-    // calculate max excitation current, torque, speed
-    motor_control_kelly_pmac.excitation_current_max = round(vehicle.battery_voltage/R_EXCITATION_COIL);
+    // calculate/set max torque, speed
     motor_control_kelly_pmac.torque_max = TORQUE_MAX; // put code here to calculate max torque
     motor_control_kelly_pmac.speed_max = SPEED_MAX; // put code here to calculate max speed
   
@@ -136,7 +135,7 @@ void kelly_pmac_control_task(motor_control motor_control_kelly_pmac, vehicle veh
     
     int percentage;
     if (motor_control_kelly_pmac.control_mode){// 0 = speed controlled , 1 = torque controlled
-      dmc_zoe_torque_pid.Compute();
+      kelly_pmac_torque_pid.Compute();
       percentage = round(abs(motor_control_kelly_pmac.torque_output)/motor_control_kelly_pmac.torque_max*100.0); //calculate percentage of gas/brake applied here;
 
       // set dac gas/brake
@@ -154,7 +153,7 @@ void kelly_pmac_control_task(motor_control motor_control_kelly_pmac, vehicle veh
     } 
     else {
       // pid motor speed
-      dmc_zoe_speed_pid.Compute();
+      kelly_pmac_speed_pid.Compute();
       percentage = round(abs(motor_control_kelly_pmac.speed_output)/motor_control_kelly_pmac.speed_max*100.0); //calculate percentage of gas/brake applied here;
 
       // set dac gas/brake
