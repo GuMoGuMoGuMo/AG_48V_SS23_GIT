@@ -244,17 +244,17 @@ void touch_task(){
 }
 
 void send_data_task(test_bench test_bench, vehicle vehicle, motor_control motor_control_dmc_zoe, motor_control motor_control_kelly_pmac, measurement measurement){
-  if (test_bench.measuring_cycle){
-    Serial.println(String("test_bench.measuring_cycle") + test_bench.measuring_cycle);  
+  //if (test_bench.measuring_cycle){
+  //  Serial.println(String("test_bench.measuring_cycle") + test_bench.measuring_cycle);  
     send_data_test_bench(zoe_test_bench);
     send_data_vehicle(power_supply);
-    send_data_motor_control(motor_control_dmc_zoe);
-    send_data_motor_control(motor_control_kelly_pmac);
+    send_data_motor_control_dmc_zoe(motor_control_dmc_zoe);
+    send_data_motor_control_kelly_pmac(motor_control_kelly_pmac);
     send_data_measurement(measuring_shaft);
-  }
-  else{
-    Serial.println(String("test_bench.measuring_cycle") + test_bench.measuring_cycle);
-  }
+  //}
+  //else{
+  //  Serial.println(String("test_bench.measuring_cycle") + test_bench.measuring_cycle);
+  //}
 }
 
 // setup function

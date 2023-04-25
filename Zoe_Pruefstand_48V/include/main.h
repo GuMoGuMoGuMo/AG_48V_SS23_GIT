@@ -167,13 +167,10 @@ struct motor_control {
   int speed_max;
 
   int throttle_poti_sensor;
-  int throttle_poti_sensor_t_minus_1;
 
   int brake_poti_sensor;
-  int brake_poti_sensor_t_minus_1;
 
   int excitation_current_poti_sensor;
-  int excitation_current_poti_sensor_t_minus_1;
 
   double speed_setpoint;
   double torque_setpoint;
@@ -218,28 +215,88 @@ struct measurement measuring_shaft;
 
 // define send data functions
 
-void send_data_test_bench (test_bench data_struct){
-    char buf[sizeof(data_struct)];
-    memcpy(buf, &data_struct, sizeof(data_struct)); 
-    Serial.write(buf, sizeof(buf));
+void send_data_test_bench (test_bench test_bench){
+    Serial.print(String("tb ") + \
+                test_bench.mode + String(" ") + \
+                test_bench.ready + String(" ") + \
+                test_bench.start + String(" ") + \
+                test_bench.stop + String(" ") + \
+                test_bench.measuring_cycle + String(" ") + \
+                test_bench.measuring_cycle_start_time);
 }
 
-void send_data_vehicle (vehicle data_struct){
-    char buf[sizeof(data_struct)];
-    memcpy(buf, &data_struct, sizeof(data_struct)); 
-    Serial.write(buf, sizeof(buf));
+void send_data_vehicle (vehicle vehicle){
+    Serial.print(String("vh ") + \
+                vehicle.battery_current + String(" ") + \
+                vehicle.battery_voltage);
 }
 
-void send_data_motor_control (motor_control data_struct){
-    char buf[sizeof(data_struct)];
-    memcpy(buf, &data_struct, sizeof(data_struct)); 
-    Serial.write(buf, sizeof(buf));
+void send_data_motor_control_dmc_zoe (motor_control motor_control){
+    Serial.print(String("dmc ") + \
+                motor_control.control_mode + String("") + \
+                motor_control.excitation_current_max + String("") + \
+                motor_control.torque_max + String("") + \
+                motor_control.speed_max + String("") + \
+                motor_control.throttle_poti_sensor + String("") + \
+                motor_control.brake_poti_sensor + String("") + \
+                motor_control.excitation_current_poti_sensor + String("") + \
+                motor_control.speed_setpoint + String("") + \
+                motor_control.torque_setpoint + String("") + \
+                motor_control.speed_sensor + String("") + \
+                motor_control.torque_sensor + String("") + \
+                motor_control.speed_output + String("") + \
+                motor_control.torque_output + String("") + \
+                motor_control.excitation_current_sensor + String("") + \
+                motor_control.excitation_current_output + String("") + \
+                motor_control.exication_current_setpoint + String("") + \
+                motor_control.kp_speed + String("") + \
+                motor_control.ki_speed + String("") + \
+                motor_control.kd_speed + String("") + \
+                motor_control.kp_torque + String("") + \
+                motor_control.ki_torque + String("") + \
+                motor_control.kd_torque + String("") + \
+                motor_control.kp_excitation_current + String("") + \
+                motor_control.ki_excitation_current + String("") + \
+                motor_control.kd_excitation_current + String("") + \
+                motor_control.state_foot_switch + String("") + \
+                motor_control.state_brake_switch);
 }
 
-void send_data_measurement (measurement data_struct){
-    char buf[sizeof(data_struct)];
-    memcpy(buf, &data_struct, sizeof(data_struct)); 
-    Serial.write(buf, sizeof(buf));
+void send_data_motor_control_kelly_pmac (motor_control motor_control){
+    Serial.print(String("dmc ") + \
+                motor_control.control_mode + String("") + \
+                motor_control.excitation_current_max + String("") + \
+                motor_control.torque_max + String("") + \
+                motor_control.speed_max + String("") + \
+                motor_control.throttle_poti_sensor + String("") + \
+                motor_control.brake_poti_sensor + String("") + \
+                motor_control.excitation_current_poti_sensor + String("") + \
+                motor_control.speed_setpoint + String("") + \
+                motor_control.torque_setpoint + String("") + \
+                motor_control.speed_sensor + String("") + \
+                motor_control.torque_sensor + String("") + \
+                motor_control.speed_output + String("") + \
+                motor_control.torque_output + String("") + \
+                motor_control.excitation_current_sensor + String("") + \
+                motor_control.excitation_current_output + String("") + \
+                motor_control.exication_current_setpoint + String("") + \
+                motor_control.kp_speed + String("") + \
+                motor_control.ki_speed + String("") + \
+                motor_control.kd_speed + String("") + \
+                motor_control.kp_torque + String("") + \
+                motor_control.ki_torque + String("") + \
+                motor_control.kd_torque + String("") + \
+                motor_control.kp_excitation_current + String("") + \
+                motor_control.ki_excitation_current + String("") + \
+                motor_control.kd_excitation_current + String("") + \
+                motor_control.state_foot_switch + String("") + \
+                motor_control.state_brake_switch);
+}
+
+void send_data_measurement (measurement measurement){
+    Serial.print(String("msr ") + \
+                measurement.torque_measuring_shaft_sensor + String(" ") + \
+                measurement.speed_measuring_shaft_sensor);
 }
 
 // create pid controller
