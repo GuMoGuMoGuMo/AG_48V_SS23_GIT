@@ -237,32 +237,32 @@ void send_data_vehicle (vehicle vehicle){
 
 void send_data_motor_control_dmc_zoe (motor_control motor_control){
     Serial.print(String("dmc ") + \
-                motor_control.control_mode + String("") + \
-                motor_control.excitation_current_max + String("") + \
-                motor_control.torque_max + String("") + \
-                motor_control.speed_max + String("") + \
-                motor_control.throttle_poti_sensor + String("") + \
-                motor_control.brake_poti_sensor + String("") + \
-                motor_control.excitation_current_poti_sensor + String("") + \
-                motor_control.speed_setpoint + String("") + \
-                motor_control.torque_setpoint + String("") + \
-                motor_control.speed_sensor + String("") + \
-                motor_control.torque_sensor + String("") + \
-                motor_control.speed_output + String("") + \
-                motor_control.torque_output + String("") + \
-                motor_control.excitation_current_sensor + String("") + \
-                motor_control.excitation_current_output + String("") + \
-                motor_control.exication_current_setpoint + String("") + \
-                motor_control.kp_speed + String("") + \
-                motor_control.ki_speed + String("") + \
-                motor_control.kd_speed + String("") + \
-                motor_control.kp_torque + String("") + \
-                motor_control.ki_torque + String("") + \
-                motor_control.kd_torque + String("") + \
-                motor_control.kp_excitation_current + String("") + \
-                motor_control.ki_excitation_current + String("") + \
-                motor_control.kd_excitation_current + String("") + \
-                motor_control.state_foot_switch + String("") + \
+                motor_control.control_mode + String(" ") + \
+                motor_control.excitation_current_max + String(" ") + \
+                motor_control.torque_max + String(" ") + \
+                motor_control.speed_max + String(" ") + \
+                motor_control.throttle_poti_sensor + String(" ") + \
+                motor_control.brake_poti_sensor + String(" ") + \
+                motor_control.excitation_current_poti_sensor + String(" ") + \
+                motor_control.speed_setpoint + String(" ") + \
+                motor_control.torque_setpoint + String(" ") + \
+                motor_control.speed_sensor + String(" ") + \
+                motor_control.torque_sensor + String(" ") + \
+                motor_control.speed_output + String(" ") + \
+                motor_control.torque_output + String(" ") + \
+                motor_control.excitation_current_sensor + String(" ") + \
+                motor_control.excitation_current_output + String(" ") + \
+                motor_control.exication_current_setpoint + String(" ") + \
+                motor_control.kp_speed + String(" ") + \
+                motor_control.ki_speed + String(" ") + \
+                motor_control.kd_speed + String(" ") + \
+                motor_control.kp_torque + String(" ") + \
+                motor_control.ki_torque + String(" ") + \
+                motor_control.kd_torque + String(" ") + \
+                motor_control.kp_excitation_current + String(" ") + \
+                motor_control.ki_excitation_current + String(" ") + \
+                motor_control.kd_excitation_current + String(" ") + \
+                motor_control.state_foot_switch + String(" ") + \
                 motor_control.state_brake_switch);
     Serial.write(13);
     Serial.write(10);
@@ -270,32 +270,32 @@ void send_data_motor_control_dmc_zoe (motor_control motor_control){
 
 void send_data_motor_control_kelly_pmac (motor_control motor_control){
     Serial.print(String("dmc ") + \
-                motor_control.control_mode + String("") + \
-                motor_control.excitation_current_max + String("") + \
-                motor_control.torque_max + String("") + \
-                motor_control.speed_max + String("") + \
-                motor_control.throttle_poti_sensor + String("") + \
-                motor_control.brake_poti_sensor + String("") + \
-                motor_control.excitation_current_poti_sensor + String("") + \
-                motor_control.speed_setpoint + String("") + \
-                motor_control.torque_setpoint + String("") + \
-                motor_control.speed_sensor + String("") + \
-                motor_control.torque_sensor + String("") + \
-                motor_control.speed_output + String("") + \
-                motor_control.torque_output + String("") + \
-                motor_control.excitation_current_sensor + String("") + \
-                motor_control.excitation_current_output + String("") + \
-                motor_control.exication_current_setpoint + String("") + \
-                motor_control.kp_speed + String("") + \
-                motor_control.ki_speed + String("") + \
-                motor_control.kd_speed + String("") + \
-                motor_control.kp_torque + String("") + \
-                motor_control.ki_torque + String("") + \
-                motor_control.kd_torque + String("") + \
-                motor_control.kp_excitation_current + String("") + \
-                motor_control.ki_excitation_current + String("") + \
-                motor_control.kd_excitation_current + String("") + \
-                motor_control.state_foot_switch + String("") + \
+                motor_control.control_mode + String(" ") + \
+                motor_control.excitation_current_max + String(" ") + \
+                motor_control.torque_max + String(" ") + \
+                motor_control.speed_max + String(" ") + \
+                motor_control.throttle_poti_sensor + String(" ") + \
+                motor_control.brake_poti_sensor + String(" ") + \
+                motor_control.excitation_current_poti_sensor + String(" ") + \
+                motor_control.speed_setpoint + String(" ") + \
+                motor_control.torque_setpoint + String(" ") + \
+                motor_control.speed_sensor + String(" ") + \
+                motor_control.torque_sensor + String(" ") + \
+                motor_control.speed_output + String(" ") + \
+                motor_control.torque_output + String(" ") + \
+                motor_control.excitation_current_sensor + String(" ") + \
+                motor_control.excitation_current_output + String(" ") + \
+                motor_control.exication_current_setpoint + String(" ") + \
+                motor_control.kp_speed + String(" ") + \
+                motor_control.ki_speed + String(" ") + \
+                motor_control.kd_speed + String(" ") + \
+                motor_control.kp_torque + String(" ") + \
+                motor_control.ki_torque + String(" ") + \
+                motor_control.kd_torque + String(" ") + \
+                motor_control.kp_excitation_current + String(" ") + \
+                motor_control.ki_excitation_current + String(" ") + \
+                motor_control.kd_excitation_current + String(" ") + \
+                motor_control.state_foot_switch + String(" ") + \
                 motor_control.state_brake_switch);
     Serial.write(13);
     Serial.write(10);
