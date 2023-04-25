@@ -4,20 +4,19 @@
 // define tasks
 void test_bench_task(test_bench test_bench, motor_control motor_control, measuring_cycle measuring_cycle_struct[MEASURING_CYCLE_TABLE_SIZE]) {
   // test_bench_task
+  test_bench.time = (millis()/1000); 
+
   if (test_bench.mode) { // mode=1 automatic; mode=0 manual
-    if (test_bench.ready) {
-      if(test_bench.start) {
-        test_bench.measuring_cycle = 1;
-        test_bench.measuring_cycle_start_time = millis()/1000;
-        test_bench.ready = 0;
-        test_bench.start = 0;
-      }
+    if(test_bench.start) {
+      test_bench.measuring_cycle = 1;
+      test_bench.measuring_cycle_start_time = millis()/1000;
+      test_bench.start = 0;
     }
     if (test_bench.measuring_cycle){
       int i;
       // Search for the table entry with the next smaller time
       i = MEASURING_CYCLE_TABLE_SIZE - 1;
-      while (i >= 0 && measuring_cycle_struct[i].time > ((millis()/1000)-test_bench.measuring_cycle_start_time)) {
+      while (i >= 0 && measuring_cycle_struct[i].time > (test_bench.time-test_bench.measuring_cycle_start_time)) {
         i--;
       }
       // write the setpoints for rpm and torque
@@ -28,7 +27,6 @@ void test_bench_task(test_bench test_bench, motor_control motor_control, measuri
         motor_control_kelly_pmac.torque_setpoint = measuring_cycle_struct[i].torque;
       } else {
         test_bench.measuring_cycle = 0;
-        test_bench.ready = 0;
       }
     }
     if(test_bench.stop){

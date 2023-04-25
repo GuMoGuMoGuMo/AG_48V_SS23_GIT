@@ -145,9 +145,9 @@ uint16_t read_adc_excitation_current_sensor(uint8_t p) {
 // define a structure
 struct test_bench {  
   bool mode = 0; // 1:automatik 0:manuell
-  bool ready = 0; // 1: ja 0: nein
   bool start; // 1: ja 0: nein
   uint16_t measuring_cycle_start_time;
+  uint16_t time;
   bool stop; // 1: ja 0: nein
   bool measuring_cycle; // 0: deactivated 1:activated
 };
@@ -218,10 +218,10 @@ struct measurement measuring_shaft;
 void send_data_test_bench (test_bench test_bench){
     Serial.print(String("tb ") + \
                 test_bench.mode + String(" ") + \
-                test_bench.ready + String(" ") + \
                 test_bench.start + String(" ") + \
                 test_bench.stop + String(" ") + \
                 test_bench.measuring_cycle + String(" ") + \
+                test_bench.time + String(" ") + \
                 test_bench.measuring_cycle_start_time);
     Serial.write(13);
     Serial.write(10);
