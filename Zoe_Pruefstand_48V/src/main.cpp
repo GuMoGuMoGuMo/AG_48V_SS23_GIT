@@ -2,29 +2,29 @@
 
 
 // define tasks
-void test_bench_task(test_bench test_bench, motor_control motor_control, measuring_cycle measuring_cycle_struct[MEASURING_CYCLE_TABLE_SIZE]) {
+void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_control, measuring_cycle_def* measuring_cycle_struct[MEASURING_CYCLE_TABLE_SIZE]) {
   // test_bench_task
-  test_bench.time = (millis()/1000); 
+  test_bench->time = (millis()/1000); 
 
-  if (test_bench.mode) { // mode=1 automatic; mode=0 manual
-    if(test_bench.start) {
-      test_bench.measuring_cycle = 1;
-      test_bench.measuring_cycle_start_time = millis()/1000;
-      test_bench.start = 0;
+  if (test_bench->mode) { // mode=1 automatic; mode=0 manual
+    if(test_bench->start) {
+      test_bench->measuring_cycle = 1;
+      test_bench->measuring_cycle_start_time = millis()/1000;
+      test_bench->start = 0;
     }
-    if (test_bench.measuring_cycle){
+    if (test_bench->measuring_cycle){
       int i;
       // Search for the table entry with the next smaller time
       i = MEASURING_CYCLE_TABLE_SIZE - 1;
-      while (i >= 0 && measuring_cycle_struct[i].time > (test_bench.time-test_bench.measuring_cycle_start_time)) {
+      while (i >= 0 && measuring_cycle_struct[i]->time > (test_bench->time-test_bench->measuring_cycle_start_time)) {
         i--;
       }
       // write the setpoints for rpm and torque
       if (i >= 0) {
-        motor_control_dmc_zoe.speed_setpoint = measuring_cycle_struct[i].rpm;
-        motor_control_kelly_pmac.speed_setpoint = measuring_cycle_struct[i].rpm;
-        motor_control_dmc_zoe.torque_setpoint = measuring_cycle_struct[i].torque;
-        motor_control_kelly_pmac.torque_setpoint = measuring_cycle_struct[i].torque;
+        motor_control_dmc_zoe->speed_setpoint = measuring_cycle_struct[i]->rpm;
+        motor_control_kelly_pmac->speed_setpoint = measuring_cycle_struct[i]->rpm;
+        motor_control_dmc_zoe->torque_setpoint = measuring_cycle_struct[i]->torque;
+        motor_control_kelly_pmac->torque_setpoint = measuring_cycle_struct[i]->torque;
       } else {
         test_bench.measuring_cycle = 0;
       }
@@ -47,16 +47,16 @@ void test_bench_task(test_bench test_bench, motor_control motor_control, measuri
   }
 }
 
-void vehicle_task(vehicle vehicle) {
+void vehicle_task(vehicle_def* vehicle) {
   // vehicle_task
   //read battery_voltage_pin
-  vehicle.battery_voltage = adc_vehicle_dmc_zoe.readADC(BATTERY_VOLTAGE_SENSOR_PIN)*adc_vehicle_dmc_zoe.toVoltage(1)*(R2_VOLTAGE_DIVIDER_U_BATT+R1_VOLTAGE_DIVIDER_U_BATT)/R2_VOLTAGE_DIVIDER_U_BATT;
+  vehicle->battery_voltage = adc_vehicle_dmc_zoe.readADC(BATTERY_VOLTAGE_SENSOR_PIN)*adc_vehicle_dmc_zoe.toVoltage(1)*(R2_VOLTAGE_DIVIDER_U_BATT+R1_VOLTAGE_DIVIDER_U_BATT)/R2_VOLTAGE_DIVIDER_U_BATT;
   // read battery_current_pin
   vehicle.battery_current = (battery_current_sensor_1.mA_DC()+battery_current_sensor_2.mA_DC())/1000.0;
 
 }
 
-void dmc_zoe_control_task(motor_control motor_control_dmc_zoe, vehicle vehicle) {
+void dmc_zoe_control_task(motor_control_def* motor_control_dmc_zoe, vehicle_def* vehicle) {
     // dmc_zoe_control_task
     // calculate/set max excitation current, torque, speed
     motor_control_dmc_zoe.excitation_current_max = round(vehicle.battery_voltage/R_EXCITATION_COIL);
@@ -122,7 +122,7 @@ void dmc_zoe_control_task(motor_control motor_control_dmc_zoe, vehicle vehicle) 
     digitalWrite(FOOT_SWITCH_DMC_PIN,motor_control_dmc_zoe.state_foot_switch);
 }
 
-void kelly_pmac_control_task(motor_control motor_control_kelly_pmac, vehicle vehicle) {
+void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, vehicle_def* vehicle) {
   // kelly_pmac_control_task
     // calculate/set max torque, speed
     motor_control_kelly_pmac.torque_max = TORQUE_MAX; // put code here to calculate max torque
@@ -177,7 +177,7 @@ void kelly_pmac_control_task(motor_control motor_control_kelly_pmac, vehicle veh
     digitalWrite(BRAKE_SWITCH_KELLY_PIN,motor_control_kelly_pmac.state_brake_switch);
 }
 
-void measurement_task(measurement measurement) {
+void measurement_task(measurement_def* measurement) {
     // measurement_task
     // read torque
   measurement.torque_measuring_shaft_sensor = ((adc_measuring_shaft.toVoltage(TORQUE_MEASURING_SHAFT_PIN) - U_SUPPLY_MEASURING_CIRCUIT * (1+R3_LM358_OP_AMP/R1_LM358_OP_AMP) * R4_LM358_OP_AMP/(R4_LM358_OP_AMP+R2_LM358_OP_AMP))* (-R1_LM358_OP_AMP/R3_LM358_OP_AMP)) * deltaM - TORQUE_OFFSET;
@@ -185,7 +185,7 @@ void measurement_task(measurement measurement) {
   measurement.speed_measuring_shaft_sensor = (adc_measuring_shaft.toVoltage(SPEED_MEASURING_SHAFT_PIN)*((R1_VOLTAGE_DIVIDER_MEASURING_SHAFT+R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)/R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)) * SPEED_MODE_MEASURING_SHAFT; //in rpm 
 }
 
-void screen_task(motor_control motor_control_dmc_zoe,motor_control motor_control_kelly_pmac ,vehicle vehicle,measurement measurement,test_bench test_bench) {
+void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* motor_control_kelly_pmac ,vehicle_def* vehicle,measurement_def* measurement,test_bench_def* test_bench) {
     // screen_task
     // Anzeige:
     // Zoe Prüfstand        
@@ -205,7 +205,7 @@ void screen_task(motor_control motor_control_dmc_zoe,motor_control motor_control
   tft.println(F("AG48V Zoe Test Bench"));
   tft.println();
   tft.setTextSize(10);
-  tft.print(F("Mode: ")); tft.print(test_bench.mode); tft.println(F("(0 = auto, 1 = manual)"));
+  tft.print(F("Mode: ")); tft.print(test_bench->mode); tft.println(F("(0 = auto, 1 = manual)"));
   tft.print(F("Measuring Cycle: ")); tft.print(test_bench.measuring_cycle); tft.println(F("(0 = inactive, 1 = active)"));
   tft.print(F("Controll Mode DMC_ZOE: ")); tft.print(motor_control_dmc_zoe.control_mode); tft.println(F("(0 = speed controlled , 1 = torque controlled)"));
   tft.print(F("Cotroll Modus KELLY_PMAC: ")); tft.print(motor_control_kelly_pmac.control_mode); tft.println(F("(0 = speed controlled , 1 = torque controlled)"));
@@ -240,24 +240,18 @@ void touch_task(){
 
 }
 
-void send_data_task(test_bench test_bench, vehicle vehicle, motor_control motor_control_dmc_zoe, motor_control motor_control_kelly_pmac, measurement measurement){
-  //if (test_bench.measuring_cycle){
-  //  Serial.println(String("test_bench.measuring_cycle") + test_bench.measuring_cycle);  
-    send_data_test_bench(zoe_test_bench);
-    send_data_vehicle(power_supply);
-    send_data_motor_control_dmc_zoe(motor_control_dmc_zoe);
-    send_data_motor_control_kelly_pmac(motor_control_kelly_pmac);
-    send_data_measurement(measuring_shaft);
-  //}
-  //else{
-  //  Serial.println(String("test_bench.measuring_cycle") + test_bench.measuring_cycle);
-  //}
+void send_data_task(test_bench_def* test_bench, vehicle_def* vehicle, motor_control_def* motor_control_dmc_zoe, motor_control_def* motor_control_kelly_pmac, measurement_def* measurement){
+  Serial.print(data_string_test_bench(test_bench) + data_string_vehicle(vehicle) + data_string_motor_control_dmc_zoe(motor_control_dmc_zoe) + data_string_motor_control_kelly_pmac(motor_control_kelly_pmac) + data_string_measurement(measurement));
+  Serial.write(13);
+  Serial.write(10);
 }
 
 // setup function
 void setup() {
   // initialize serial communication
-  Serial.begin(112500);
+  Serial.begin(115200);
+
+  /*
 
   // initialize screen
   tft.begin();
@@ -358,7 +352,7 @@ void setup() {
   motor_control_kelly_pmac.ki_torque=1;
   motor_control_kelly_pmac.kd_torque=0;
 
-
+  */
 
   // create tasks
   /*xTaskCreate(test_bench_task, "Analog Output Task", 100, NULL, 1, NULL);
@@ -373,4 +367,8 @@ void setup() {
 }
 
 // loop function (not used)
-void loop() {}
+void loop() {
+  
+  send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
+  delay(500);
+}
