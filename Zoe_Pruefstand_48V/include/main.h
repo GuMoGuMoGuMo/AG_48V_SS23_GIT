@@ -50,7 +50,7 @@
 
 #define FOOT_SWITCH_DMC_PIN 26
 
-#define PWM_ERREGUNG_ZOE_PIN A13
+#define PWM_EXCITATION_CURRENT_ZOE_PIN A13
 
 #define FOOT_SWITCH_KELLY_PIN 22
 #define BRAKE_SWITCH_KELLY_PIN 24
@@ -92,16 +92,20 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 ADS1115 adc_vehicle_dmc_zoe(ADRESS_ADC_VEHICLE_DMZ_ZOE);
 ADS1115 adc_measuring_shaft(ADRESS_ADC_MEASURING_SHAFT_ZOE);
+ADS1115 adc_measuring_dmc_current(ADRESS_ADC_DMC_CURRENT);
 
 // define analog-digital converter DMC PINS 
 #define BATTERY_VOLTAGE_SENSOR_PIN 1  
-#define BATTERY_CURRENT_SENSOR_1_PIN 2
-#define BATTERY_CURRENT_SENSOR_2_PIN 0
 #define EXCITATION_CURRENT_SENSOR_ZOE_PIN 3
 
 // define analog-digital converter DMC measuring shaft PINS
- #define TORQUE_MEASURING_SHAFT_PIN 1
- #define SPEED_MEASURING_SHAFT_PIN 0
+#define TORQUE_MEASURING_SHAFT_PIN 1
+#define SPEED_MEASURING_SHAFT_PIN 0
+
+// define analog-digital converter adc_measuring_dmc_current
+#define BATTERY_CURRENT_SENSOR_1_PIN 1
+#define BATTERY_CURRENT_SENSOR_2_PIN 2
+#define BATTERY_CURRENT_SENSOR_3_PIN 3
 
 // define digital-analog converters
 #include <Adafruit_MCP4725.h>
@@ -120,18 +124,25 @@ Adafruit_MCP4725 dac_bremse_kelly;
 #include <ACS712.h> // Stromsensor lib
 ACS712 battery_current_sensor_1(BATTERY_CURRENT_SENSOR_1_PIN, U_REF, 1023,40); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 40mV/A
 ACS712 battery_current_sensor_2(BATTERY_CURRENT_SENSOR_2_PIN, U_REF, 1023,40); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 40mV/A
+ACS712 battery_current_sensor_3(BATTERY_CURRENT_SENSOR_3_PIN, U_REF, 1023,40); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 40mV/A
 ACS712 excitation_current_sensor(EXCITATION_CURRENT_SENSOR_ZOE_PIN, U_REF, 1023,66); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 66mV/A
 
 //  wrapper needed for external analogRead()
 //  as casting behavior is undefined between different function signatures.
 uint16_t read_adc_battery_current_sensor_1(uint8_t p) {
-  return adc_vehicle_dmc_zoe.readADC(BATTERY_CURRENT_SENSOR_1_PIN);
+  return adc_measuring_dmc_current.readADC(BATTERY_CURRENT_SENSOR_1_PIN);
 };
 
 //  wrapper needed for external analogRead()
 //  as casting behavior is undefined between different function signatures.
 uint16_t read_adc_battery_current_sensor_2(uint8_t p) {
-  return adc_vehicle_dmc_zoe.readADC(BATTERY_CURRENT_SENSOR_2_PIN);
+  return adc_measuring_dmc_current.readADC(BATTERY_CURRENT_SENSOR_2_PIN);
+};
+
+//  wrapper needed for external analogRead()
+//  as casting behavior is undefined between different function signatures.
+uint16_t read_adc_battery_current_sensor_3(uint8_t p) {
+  return adc_measuring_dmc_current.readADC(BATTERY_CURRENT_SENSOR_3_PIN);
 };
 
 //  wrapper needed for external analogRead()

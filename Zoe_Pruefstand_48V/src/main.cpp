@@ -56,7 +56,7 @@ void vehicle_task(vehicle_def* vehicle) {
   //read battery_voltage_pin
   vehicle->battery_voltage = adc_vehicle_dmc_zoe.readADC(BATTERY_VOLTAGE_SENSOR_PIN)*adc_vehicle_dmc_zoe.toVoltage(1)*(R2_VOLTAGE_DIVIDER_U_BATT+R1_VOLTAGE_DIVIDER_U_BATT)/R2_VOLTAGE_DIVIDER_U_BATT;
   // read battery_current_pin
-  vehicle->battery_current = (battery_current_sensor_1.mA_DC()+battery_current_sensor_2.mA_DC())/1000.0;
+  vehicle->battery_current = (battery_current_sensor_1.mA_DC()+battery_current_sensor_2.mA_DC()+battery_current_sensor_3.mA_DC())/1000.0;
 
 }
 
@@ -82,7 +82,7 @@ void dmc_zoe_control_task(motor_control_def* motor_control_dmc_zoe, vehicle_def*
     excitation_current_pid.Compute();
     // set pwm excitation_current
     int dc_pwm = round((constrain(motor_control_dmc_zoe->excitation_current_output/motor_control_dmc_zoe->excitation_current_max,0,1)*100.0));
-    analogWrite(PWM_ERREGUNG_ZOE_PIN,round(dc_pwm/100.0*255.0)); // frequ= 980 Hz Value = DC 0...255
+    analogWrite(PWM_EXCITATION_CURRENT_ZOE_PIN,round(dc_pwm/100.0*255.0)); // frequ= 980 Hz Value = DC 0...255
 
 
     int percentage;
@@ -269,8 +269,8 @@ void setup() {
   pinMode(POTI_BRAKE_DMC_PIN,INPUT);
 
   // initialize digital output pins
-  pinMode(PWM_ERREGUNG_ZOE_PIN,OUTPUT);
-  digitalWrite(PWM_ERREGUNG_ZOE_PIN, LOW); 
+  pinMode(PWM_EXCITATION_CURRENT_ZOE_PIN,OUTPUT);
+  digitalWrite(PWM_EXCITATION_CURRENT_ZOE_PIN, LOW); 
   
   pinMode(FOOT_SWITCH_DMC_PIN,OUTPUT);
   digitalWrite(FOOT_SWITCH_DMC_PIN, LOW);  
@@ -303,6 +303,8 @@ void setup() {
   battery_current_sensor_1.autoMidPoint(); 
   battery_current_sensor_2.setADC(read_adc_battery_current_sensor_2, 10, 1023);
   battery_current_sensor_2.autoMidPoint(); 
+  battery_current_sensor_3.setADC(read_adc_battery_current_sensor_3, 10, 1023);
+  battery_current_sensor_3.autoMidPoint(); 
   excitation_current_sensor.setADC(read_adc_excitation_current_sensor, 10, 1023);
   excitation_current_sensor.autoMidPoint();
 
