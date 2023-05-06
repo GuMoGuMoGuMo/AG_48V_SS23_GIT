@@ -159,57 +159,57 @@ uint16_t read_adc_excitation_current_sensor(uint8_t p) {
 
 // define a structure
 struct test_bench_def {  
-  bool mode = 0; // 1:automatik 0:manuell
-  bool start = 0; // 1: ja 0: nein
-  uint16_t measuring_cycle_start_time = 0;
-  uint16_t time = 0;
-  bool stop = 0; // 1: ja 0: nein
+  bool mode; // 1:automatik 0:manuell
+  bool start; // 1: ja 0: nein
+  uint16_t measuring_cycle_start_time;
+  uint16_t time;
+  bool stop; // 1: ja 0: nein
   bool measuring_cycle = 1; // 0: deactivated 1:activated
 };
 
 // define a structure
 struct vehicle_def {
-  double battery_voltage = 0;
-  double battery_current = 0;
+  double battery_voltage;
+  double battery_current;
 };
 
 // define a structure
 struct motor_control_def {
   bool control_mode = true;  // 0 = speed controlled , 1 = torque controlled
 
-  int excitation_current_max = 0;
-  int torque_max = 0;
-  int speed_max = 0;
+  int excitation_current_max;
+  int torque_max;
+  int speed_max;
 
-  int throttle_poti_sensor = 0;
+  int throttle_poti_sensor;
 
-  int brake_poti_sensor = 0;
+  int brake_poti_sensor;
 
-  int excitation_current_poti_sensor = 0;
+  int excitation_current_poti_sensor;
 
-  double speed_setpoint = 0;
-  double torque_setpoint = 0;
-  double speed_sensor = 0;
-  double torque_sensor = 0;
+  double speed_setpoint;
+  double torque_setpoint;
+  double speed_sensor;
+  double torque_sensor;
 
-  double speed_output = 0;
-  double torque_output = 0;
+  double speed_output;
+  double torque_output;
   
-  double excitation_current_sensor = 0;
-  double excitation_current_output = 0;
-  double exication_current_setpoint = 0; 
+  double excitation_current_sensor;
+  double excitation_current_output;
+  double exication_current_setpoint; 
 
-  double kp_speed = 0;
-  double ki_speed = 0;
-  double kd_speed = 0;
+  double kp_speed;
+  double ki_speed;
+  double kd_speed;
 
-  double kp_torque = 0;
-  double ki_torque = 0;
-  double kd_torque = 0;
+  double kp_torque;
+  double ki_torque;
+  double kd_torque;
 
-  double kp_excitation_current = 0;
-  double ki_excitation_current = 0;
-  double kd_excitation_current = 0;
+  double kp_excitation_current;
+  double ki_excitation_current;
+  double kd_excitation_current;
 
   bool state_foot_switch; // 0: open 1:closed
   bool state_brake_switch; // 0: open 1:closed
@@ -217,8 +217,8 @@ struct motor_control_def {
 
 // define a structure
 struct measurement_def {
-  double torque_measuring_shaft_sensor = 0;
-  double speed_measuring_shaft_sensor = 0;
+  double torque_measuring_shaft_sensor;
+  double speed_measuring_shaft_sensor;
 };
 
 // create objects

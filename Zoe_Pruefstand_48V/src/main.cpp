@@ -29,6 +29,7 @@ void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_contro
         motor_control_kelly_pmac->speed_setpoint = measuring_cycle_struct[i]->rpm;
         motor_control_dmc_zoe->torque_setpoint = measuring_cycle_struct[i]->torque;
         motor_control_kelly_pmac->torque_setpoint = measuring_cycle_struct[i]->torque;
+        motor_control_dmc_zoe->exication_current_setpoint = measuring_cycle_struct[i]->exitacion_current;
       } else {
         test_bench->measuring_cycle = 0;
       }
@@ -40,6 +41,7 @@ void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_contro
       motor_control_kelly_pmac->speed_setpoint = 0;
       motor_control_dmc_zoe->torque_setpoint = 0;
       motor_control_kelly_pmac->torque_setpoint =0;
+      motor_control_dmc_zoe->exication_current_setpoint =0;
     }
   }  
   else {
@@ -320,6 +322,12 @@ void setup() {
     while (1);
   }
   adc_measuring_shaft.setGain(0);
+
+   if (!adc_measuring_dmc_current.begin()) {
+    Serial.println("Failed to initialize adc_measuring_dmc_current.");
+    while (1);
+  }
+  adc_measuring_dmc_current.setGain(0);
 
   // initialize pid controllers
   motor_control_dmc_zoe.speed_max = SPEED_MAX; // put code here to calculate max speed
