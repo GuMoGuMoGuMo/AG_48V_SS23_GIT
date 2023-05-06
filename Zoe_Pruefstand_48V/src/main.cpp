@@ -1,8 +1,7 @@
 #include "main.h"
 
-
 // define tasks
-void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_control_dmc_zoe,motor_control_def* motor_control_kelly_pmac, measuring_cycle_def* measuring_cycle_struct[MEASURING_CYCLE_TABLE_SIZE]) {
+void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_control_dmc_zoe,motor_control_def* motor_control_kelly_pmac, const measuring_cycle_def* measuring_cycle_struct[MEASURING_CYCLE_TABLE_SIZE]) {
   // test_bench_task
   test_bench->time = millis(); 
 
@@ -257,8 +256,6 @@ void setup() {
   // initialize serial communication
   Serial.begin(115200);
 
-  
-
   // initialize screen
   tft.begin();
   tft.setRotation(3);
@@ -386,7 +383,12 @@ void setup() {
 
 // loop function (not used)
 void loop() {
-  
+  test_bench_task(&zoe_test_bench,&motor_control_dmc_zoe,&motor_control_kelly_pmac,(const measuring_cycle_def**)&measuring_cycle_1);
+  vehicle_task(&power_supply);
+  dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply);
+  kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply);
+  measurement_task(&measuring_shaft);
+  screen_task(&motor_control_dmc_zoe,&motor_control_kelly_pmac,&power_supply,&measuring_shaft,&zoe_test_bench);
   send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
   delay(500);
 }
