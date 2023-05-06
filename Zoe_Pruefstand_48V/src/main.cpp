@@ -4,19 +4,23 @@
 // define tasks
 void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_control_dmc_zoe,motor_control_def* motor_control_kelly_pmac, measuring_cycle_def* measuring_cycle_struct[MEASURING_CYCLE_TABLE_SIZE]) {
   // test_bench_task
-  test_bench->time = (millis()/1000); 
+  test_bench->time = millis(); 
 
   if (test_bench->mode) { // mode=1 automatic; mode=0 manual
     if(test_bench->start) {
       test_bench->measuring_cycle = 1;
-      test_bench->measuring_cycle_start_time = millis()/1000;
+      test_bench->measuring_cycle_start_time = millis();
+          // set foot switch
+      
+      digitalWrite(FOOT_SWITCH_DMC_PIN,motor_control_dmc_zoe->state_foot_switch); // set foot switch
+      
       test_bench->start = 0;
     }
     if (test_bench->measuring_cycle){
       int i;
       // Search for the table entry with the next smaller time
       i = MEASURING_CYCLE_TABLE_SIZE - 1;
-      while (i >= 0 && measuring_cycle_struct[i]->time > (test_bench->time-test_bench->measuring_cycle_start_time)) {
+      while (i >= 0 && measuring_cycle_struct[i]->time/1000 > (test_bench->time/1000-test_bench->measuring_cycle_start_time/1000)) {
         i--;
       }
       // write the setpoints for rpm and torque
@@ -277,6 +281,12 @@ void setup() {
   pinMode(BRAKE_SWITCH_KELLY_PIN,OUTPUT);
   digitalWrite(BRAKE_SWITCH_KELLY_PIN, LOW); 
 
+  // set motors from Neutral to drive
+  pinMode(SWITCH_D_N_DMC_PIN,OUTPUT);
+  pinMode(SWITCH_D_N_KELLY_PIN,OUTPUT);
+  digitalWrite(SWITCH_D_N_DMC_PIN,HIGH);
+  digitalWrite(SWITCH_D_N_KELLY_PIN,HIGH);
+
   // initialize digital analog converters
   dac_gas_dmc.begin(ADRESS_DAC_gas_dmc);
   dac_bremse_dmc.begin(ADRESS_DAC_bremse_dmc);
@@ -351,8 +361,6 @@ void setup() {
   motor_control_kelly_pmac.kp_torque=1;
   motor_control_kelly_pmac.ki_torque=1;
   motor_control_kelly_pmac.kd_torque=0;
-
-  
 
   // create tasks
   /*xTaskCreate(test_bench_task, "Analog Output Task", 100, NULL, 1, NULL);

@@ -58,6 +58,9 @@
 #define POTI_THROTTLE_KELLY_PIN A3
 #define POTI_BRAKE_KELLY_PIN A4
 
+#define SWITCH_D_N_DMC_PIN 36
+#define SWITCH_D_N_KELLY_PIN 38
+
 
 // define ILI9341+Touchscreen
 #include <SPI.h>
@@ -85,6 +88,7 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 #include "ADS1X15.h"
 #define ADRESS_ADC_VEHICLE_DMZ_ZOE 0x48
 #define ADRESS_ADC_MEASURING_SHAFT_ZOE 0x49
+#define ADRESS_ADC_DMC_CURRENT 0x4A
 
 ADS1115 adc_vehicle_dmc_zoe(ADRESS_ADC_VEHICLE_DMZ_ZOE);
 ADS1115 adc_measuring_shaft(ADRESS_ADC_MEASURING_SHAFT_ZOE);
@@ -196,8 +200,8 @@ struct motor_control_def {
   double ki_excitation_current = 0;
   double kd_excitation_current = 0;
 
-  bool state_foot_switch = false; // 0: open 1:closed
-  bool state_brake_switch = false; // 0: open 1:closed
+  bool state_foot_switch; // 0: open 1:closed
+  bool state_brake_switch; // 0: open 1:closed
 };
 
 // define a structure
