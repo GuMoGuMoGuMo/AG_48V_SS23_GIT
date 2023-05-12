@@ -8,14 +8,17 @@
 //#include measuring cycles
 #include "measuring_cycles.h"
 
+/*
 // include FreeRTOS libs
 #include <Arduino_FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
+*/
 
 // define bench limits
 #define TORQUE_MAX 10
 #define SPEED_MAX 500
+#define EXCITATION_CURRENT_MAX 5
 
  // define constants
 #define R_EXCITATION_COIL 8.5
@@ -70,6 +73,7 @@
 #include <Adafruit_ILI9341.h>
 #include "hs_esslingen_logo_bitmap.h"
 
+
 #define WIDTH  ILI9341_TFTWIDTH
 #define HEIGHT ILI9341_TFTHEIGHT
 
@@ -95,14 +99,14 @@ ADS1115 adc_measuring_shaft(ADRESS_ADC_MEASURING_SHAFT_ZOE);
 ADS1115 adc_measuring_dmc_current(ADRESS_ADC_DMC_CURRENT);
 
 // define analog-digital converter DMC PINS 
-#define BATTERY_VOLTAGE_SENSOR_PIN 1  
-#define EXCITATION_CURRENT_SENSOR_ZOE_PIN 3
+#define BATTERY_VOLTAGE_SENSOR_PIN 1 
 
 // define analog-digital converter DMC measuring shaft PINS
 #define TORQUE_MEASURING_SHAFT_PIN 1
 #define SPEED_MEASURING_SHAFT_PIN 0
 
 // define analog-digital converter adc_measuring_dmc_current
+#define EXCITATION_CURRENT_SENSOR_ZOE_PIN 0
 #define BATTERY_CURRENT_SENSOR_1_PIN 1
 #define BATTERY_CURRENT_SENSOR_2_PIN 2
 #define BATTERY_CURRENT_SENSOR_3_PIN 3
@@ -148,7 +152,7 @@ uint16_t read_adc_battery_current_sensor_3(uint8_t p) {
 //  wrapper needed for external analogRead()
 //  as casting behavior is undefined between different function signatures.
 uint16_t read_adc_excitation_current_sensor(uint8_t p) {
-  return adc_vehicle_dmc_zoe.readADC(EXCITATION_CURRENT_SENSOR_ZOE_PIN);
+  return adc_measuring_dmc_current.readADC(EXCITATION_CURRENT_SENSOR_ZOE_PIN);
 };
 
 
@@ -159,66 +163,66 @@ uint16_t read_adc_excitation_current_sensor(uint8_t p) {
 
 // define a structure
 struct test_bench_def {  
-  bool mode; // 1:automatik 0:manuell
-  bool start; // 1: ja 0: nein
-  uint16_t measuring_cycle_start_time;
-  uint16_t time;
-  bool stop; // 1: ja 0: nein
+  bool mode = 0; // 1:automatik 0:manuell
+  bool start = 0; // 1: ja 0: nein
+  uint16_t measuring_cycle_start_time = 0;
+  uint16_t time = 0;
+  bool stop = 0; // 1: ja 0: nein
   bool measuring_cycle = 1; // 0: deactivated 1:activated
 };
 
 // define a structure
 struct vehicle_def {
-  double battery_voltage;
-  double battery_current;
+  double battery_voltage = 48;
+  double battery_current = 0.1;
 };
 
 // define a structure
 struct motor_control_def {
-  bool control_mode = true;  // 0 = speed controlled , 1 = torque controlled
+  bool control_mode = 0;  // 0 = speed controlled , 1 = torque controlled
 
-  int excitation_current_max;
-  int torque_max;
-  int speed_max;
+  int excitation_current_max = EXCITATION_CURRENT_MAX;
+  int torque_max =TORQUE_MAX ;
+  int speed_max = SPEED_MAX;
 
-  int throttle_poti_sensor;
+  int throttle_poti_sensor = 0.01;
 
-  int brake_poti_sensor;
+  int brake_poti_sensor = 0.01;
 
-  int excitation_current_poti_sensor;
+  int excitation_current_poti_sensor = 0.01;
 
-  double speed_setpoint;
-  double torque_setpoint;
-  double speed_sensor;
-  double torque_sensor;
+  double speed_setpoint = 0;
+  double torque_setpoint = 0;
+  double speed_sensor = 0;
+  double torque_sensor = 0;
 
-  double speed_output;
-  double torque_output;
+  double speed_output = 0;
+  double torque_output = 0;
   
-  double excitation_current_sensor;
-  double excitation_current_output;
-  double exication_current_setpoint; 
+  double excitation_current_sensor = 0;
+  double excitation_current_output = 0;
+  double exication_current_setpoint = 0; 
 
-  double kp_speed;
-  double ki_speed;
-  double kd_speed;
+  double kp_speed = 0;
+  double ki_speed = 0;
+  double kd_speed = 0;
 
-  double kp_torque;
-  double ki_torque;
-  double kd_torque;
+  double kp_torque = 0;
+  double ki_torque = 0;
+  double kd_torque = 0;
 
-  double kp_excitation_current;
-  double ki_excitation_current;
-  double kd_excitation_current;
+  double kp_excitation_current = 0;
+  double ki_excitation_current = 0;
+  double kd_excitation_current = 0;
 
-  bool state_foot_switch; // 0: open 1:closed
-  bool state_brake_switch; // 0: open 1:closed
+  bool state_foot_switch = 0; // 0: open 1:closed
+  bool state_brake_switch = 0; // 0: open 1:closed
 };
 
 // define a structure
 struct measurement_def {
-  double torque_measuring_shaft_sensor;
-  double speed_measuring_shaft_sensor;
+  double torque_measuring_shaft_sensor = 0;
+  double speed_measuring_shaft_sensor = 0;
 };
 
 // create objects
@@ -318,6 +322,7 @@ String data_string_measurement (measurement_def* measurement){
                 measurement->speed_measuring_shaft_sensor)+ " " ;
   return measurement_data;
 }
+
 
 // create pid controller
 #include <PID_v1.h> 
