@@ -185,9 +185,9 @@ void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, vehicl
 void measurement_task(measurement_def* measurement) {
     // measurement_task
     // read torque
-  measurement->torque_measuring_shaft_sensor = ((adc_measuring_shaft.toVoltage(TORQUE_MEASURING_SHAFT_PIN) - U_SUPPLY_MEASURING_CIRCUIT * (1+R3_LM358_OP_AMP/R1_LM358_OP_AMP) * R4_LM358_OP_AMP/(R4_LM358_OP_AMP+R2_LM358_OP_AMP))* (-R1_LM358_OP_AMP/R3_LM358_OP_AMP)) * deltaM - TORQUE_OFFSET;
+  measurement->torque_measuring_shaft_sensor = ((adc_measuring_shaft.readADC(TORQUE_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1) - U_SUPPLY_MEASURING_CIRCUIT * (1+R3_LM358_OP_AMP/R1_LM358_OP_AMP) * R4_LM358_OP_AMP/(R4_LM358_OP_AMP+R2_LM358_OP_AMP))* (-R1_LM358_OP_AMP/R3_LM358_OP_AMP)) * deltaM - TORQUE_OFFSET;
     // read speed
-  measurement->speed_measuring_shaft_sensor = (adc_measuring_shaft.toVoltage(SPEED_MEASURING_SHAFT_PIN)*((R1_VOLTAGE_DIVIDER_MEASURING_SHAFT+R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)/R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)) * SPEED_MODE_MEASURING_SHAFT; //in rpm 
+  measurement->speed_measuring_shaft_sensor = (adc_measuring_shaft.readADC(SPEED_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1)*((R1_VOLTAGE_DIVIDER_MEASURING_SHAFT+R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)/R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)) * SPEED_MODE_MEASURING_SHAFT; //in rpm 
 }
 
 void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* motor_control_kelly_pmac ,vehicle_def* vehicle,measurement_def* measurement,test_bench_def* test_bench) {
@@ -468,7 +468,7 @@ void loop() {
   //dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply);
   //kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply);
   measurement_task(&measuring_shaft);
-  touch_task(&zoe_test_bench);
+  //touch_task(&zoe_test_bench);
   screen_task(&motor_control_dmc_zoe,&motor_control_kelly_pmac,&power_supply,&measuring_shaft,&zoe_test_bench);
   send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
   delay(100);
