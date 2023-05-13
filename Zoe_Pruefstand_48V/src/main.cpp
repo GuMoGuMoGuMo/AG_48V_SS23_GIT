@@ -195,6 +195,8 @@ void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* mot
     // Anzeige:
     // Zoe Prüfstand        
     // Mode = Automatik/Manuell
+    // Start/Restart Measuring Cycle = activated/deactivated
+    // Stop Measuring Cycle = activated/deactivated
     // Measuring Cycle = aktiv/ inaktiv
     // Controll Mode DMC_ZOE = Torque/Speed
     // Cotroll Modus KELLY_PMAC = Torque/Speed
@@ -212,6 +214,8 @@ void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* mot
   //tft.println();
   tft.setTextSize(1);
   tft.print(F("Mode                    : ")); tft.print(test_bench->mode); tft.println(F(" (0 = manual, 1 = auto)"));
+  tft.print(F("Start Measuring Cycle   : ")); tft.print(test_bench->start); tft.println(F(" (0 = deactivated, 1 = activated)"));
+  tft.print(F("Stop Measuring Cycle    : ")); tft.print(test_bench->stop); tft.println(F(" (0 = deactgivated, 1 = activated)"));
   tft.print(F("Measuring Cycle         : ")); tft.print(test_bench->measuring_cycle); tft.println(F(" (0 = inactive, 1 = active)"));
   tft.print(F("Controll Mode DMC_ZOE   : ")); tft.print(motor_control_dmc_zoe->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
   tft.print(F("Controll Mode KELLY_PMAC: ")); tft.print(motor_control_kelly_pmac->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
@@ -242,7 +246,53 @@ void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* mot
   tft.print(F("Generator Efficiency DMC_ZOE: ")); tft.print(generator_efficiency_dmc_zoe); tft.println(F(" %   "));
 }
 
-void touch_task(){
+void touch_task(test_bench_def* test_bench){
+  TSPoint t;    // create touch variable to save not calibrated touch points
+  t=ts.getPoint();    // read touch points
+  if (t.z > ts.pressureThreshhold) {    //if touch pressure is higher than treshold its a touch event
+    touchPoint.x=map(t.y,Y_MAX,Y_MIN,0,ILI9341_TFTWIDTH); // Kalibrierung und Speichern in globaler Variable
+    touchPoint.y=map(t.x,X_MIN,X_MAX,0,ILI9341_TFTHEIGHT); // Kalibrierung und Speichern in globaler Variable
+    
+    // Koordinaten auf seriellem Monitor anzeigen
+    //Serial.print("X = "); Serial.print(touchPoint.x);
+    //Serial.print("\tY = "); Serial.print(touchPoint.y);
+    //Serial.print("t\Pressure = "); Serial.println(t.z);
+
+    if (touchPoint.x > BUTTON1_TOP_LEFT_X && touchPoint.x <(BUTTON1_TOP_LEFT_X+BUTTON1_WIDTH) && touchPoint.y >BUTTON1_TOP_LEFT_Y && touchPoint.y <(BUTTON1_TOP_LEFT_Y+BUTTON1_HEIGHT)){ // mode button
+      tft.drawRect(BUTTON1_TOP_LEFT_X,BUTTON1_TOP_LEFT_Y,BUTTON1_WIDTH,BUTTON1_HEIGHT,ILI9341_BLUE);
+      tft.drawRect(BUTTON2_TOP_LEFT_X,BUTTON2_TOP_LEFT_Y,BUTTON2_WIDTH,BUTTON2_HEIGHT,ILI9341_WHITE);
+      tft.drawRect(BUTTON3_TOP_LEFT_X,BUTTON3_TOP_LEFT_Y,BUTTON3_WIDTH,BUTTON3_HEIGHT,ILI9341_WHITE);
+      if(test_bench->mode){
+        test_bench->mode = 0;
+      }
+      else{
+        test_bench->mode = 1;
+      }
+    }
+    if (touchPoint.x > BUTTON2_TOP_LEFT_X && touchPoint.x <(BUTTON2_TOP_LEFT_X+BUTTON2_WIDTH) && touchPoint.y >BUTTON2_TOP_LEFT_Y && touchPoint.y <(BUTTON2_TOP_LEFT_Y+BUTTON2_HEIGHT)){ // start button
+      tft.drawRect(BUTTON1_TOP_LEFT_X,BUTTON1_TOP_LEFT_Y,BUTTON1_WIDTH,BUTTON1_HEIGHT,ILI9341_WHITE);
+      tft.drawRect(BUTTON2_TOP_LEFT_X,BUTTON2_TOP_LEFT_Y,BUTTON2_WIDTH,BUTTON2_HEIGHT,ILI9341_BLUE);
+      tft.drawRect(BUTTON3_TOP_LEFT_X,BUTTON3_TOP_LEFT_Y,BUTTON3_WIDTH,BUTTON3_HEIGHT,ILI9341_WHITE);
+      if(test_bench->start){
+        test_bench->start = 0;
+      }
+      else{
+        test_bench->start = 1;
+      }
+    }
+    if (touchPoint.x > BUTTON3_TOP_LEFT_X && touchPoint.x <(BUTTON3_TOP_LEFT_X+BUTTON3_WIDTH) && touchPoint.y >BUTTON3_TOP_LEFT_Y && touchPoint.y <(BUTTON3_TOP_LEFT_Y+BUTTON3_HEIGHT)){ // stop button
+      tft.drawRect(BUTTON1_TOP_LEFT_X,BUTTON1_TOP_LEFT_Y,BUTTON1_WIDTH,BUTTON1_HEIGHT,ILI9341_WHITE);
+      tft.drawRect(BUTTON2_TOP_LEFT_X,BUTTON2_TOP_LEFT_Y,BUTTON2_WIDTH,BUTTON2_HEIGHT,ILI9341_WHITE);
+      tft.drawRect(BUTTON3_TOP_LEFT_X,BUTTON3_TOP_LEFT_Y,BUTTON3_WIDTH,BUTTON3_HEIGHT,ILI9341_BLUE);
+      if(test_bench->stop){
+        test_bench->stop = 0;
+      }
+      else{
+        test_bench->stop = 1;
+      }
+    }
+      
+  }
 
 }
 
@@ -389,7 +439,21 @@ void setup() {
   // start scheduler
   vTaskStartScheduler();
   */
- tft.fillScreen(ILI9341_BLACK);
+
+  // init buttons for touchscreen
+  tft.fillScreen(ILI9341_BLACK);
+  tft.drawRect(BUTTON1_TOP_LEFT_X,BUTTON1_TOP_LEFT_Y,BUTTON1_WIDTH,BUTTON1_HEIGHT,ILI9341_WHITE);
+  tft.fillRect(BUTTON1_TOP_LEFT_X+1,BUTTON1_TOP_LEFT_Y+1,BUTTON1_WIDTH-2,BUTTON1_HEIGHT-2,ILI9341_DARKGREEN);
+  tft.setCursor(BUTTON1_TOP_LEFT_X+3, BUTTON1_TOP_LEFT_Y-30);
+  tft.print("Mode");
+  tft.drawRect(BUTTON2_TOP_LEFT_X,BUTTON2_TOP_LEFT_Y,BUTTON2_WIDTH,BUTTON2_HEIGHT,ILI9341_WHITE);
+  tft.fillRect(BUTTON2_TOP_LEFT_X+1,BUTTON2_TOP_LEFT_Y+1,BUTTON2_WIDTH-2,BUTTON2_HEIGHT-2,ILI9341_DARKGREEN);
+  tft.setCursor(BUTTON2_TOP_LEFT_X+3, BUTTON2_TOP_LEFT_Y-30);
+  tft.print("Start/Restart Measuring Cycle");
+  tft.drawRect(BUTTON3_TOP_LEFT_X,BUTTON3_TOP_LEFT_Y,BUTTON3_WIDTH,BUTTON3_HEIGHT,ILI9341_WHITE);
+  tft.fillRect(BUTTON3_TOP_LEFT_X+1,BUTTON3_TOP_LEFT_Y+1,BUTTON3_WIDTH-2,BUTTON3_HEIGHT-2,ILI9341_DARKGREEN);
+  tft.setCursor(BUTTON3_TOP_LEFT_X+3, BUTTON3_TOP_LEFT_Y-30);
+  tft.print("Stop Measuring Cycle");
 }
 
 // loop function
@@ -404,7 +468,7 @@ void loop() {
   //dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply);
   //kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply);
   measurement_task(&measuring_shaft);
-  
+  touch_task(&zoe_test_bench);
   screen_task(&motor_control_dmc_zoe,&motor_control_kelly_pmac,&power_supply,&measuring_shaft,&zoe_test_bench);
   send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
   delay(100);

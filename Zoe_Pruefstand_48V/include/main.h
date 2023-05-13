@@ -84,9 +84,29 @@
 #define YM 34   // can be a digital pin
 #define XP 32   // can be a digital pin
 
+#define X_MAX 885
+#define X_MIN 132
+#define Y_MAX 921
+#define Y_MIN 99
+
+#define BUTTON1_TOP_LEFT_X 5
+#define BUTTON1_TOP_LEFT_Y 150
+#define BUTTON1_WIDTH 100
+#define BUTTON1_HEIGHT 80
+
+#define BUTTON2_TOP_LEFT_X 110
+#define BUTTON2_TOP_LEFT_Y 150
+#define BUTTON2_WIDTH 100
+#define BUTTON2_HEIGHT 80
+
+#define BUTTON3_TOP_LEFT_X 215
+#define BUTTON3_TOP_LEFT_Y 150
+#define BUTTON3_WIDTH 100
+#define BUTTON3_HEIGHT 80
+
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
-
+TSPoint touchPoint;
 
 // define Analog-Digital Converter ADS1115
 #include "ADS1X15.h"
