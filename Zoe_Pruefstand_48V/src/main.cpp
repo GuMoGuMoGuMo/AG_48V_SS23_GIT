@@ -211,23 +211,23 @@ void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* mot
   tft.println(F("AG48V Test Bench"));
   //tft.println();
   tft.setTextSize(1);
-  tft.print(F("Mode                   : ")); tft.print(test_bench->mode); tft.println(F(" (0 = auto, 1 = manual)"));
-  tft.print(F("Measuring Cycle        : ")); tft.print(test_bench->measuring_cycle); tft.println(F(" (0 = inactive, 1 = active)"));
-  tft.print(F("Controll Mode DMC_ZOE  : ")); tft.print(motor_control_dmc_zoe->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
+  tft.print(F("Mode                    : ")); tft.print(test_bench->mode); tft.println(F(" (0 = manual, 1 = auto)"));
+  tft.print(F("Measuring Cycle         : ")); tft.print(test_bench->measuring_cycle); tft.println(F(" (0 = inactive, 1 = active)"));
+  tft.print(F("Controll Mode DMC_ZOE   : ")); tft.print(motor_control_dmc_zoe->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
   tft.print(F("Controll Mode KELLY_PMAC: ")); tft.print(motor_control_kelly_pmac->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
   tft.println();
-  tft.print(F("Excitation Current     : ")); tft.print(motor_control_dmc_zoe->excitation_current_sensor); tft.println(F("A"));
+  tft.print(F("Excitation Current     : ")); tft.print(motor_control_dmc_zoe->excitation_current_sensor); tft.println(F(" A  "));
   tft.println();
-  tft.print(F("Battery(DMC) Current   : ")); tft.print(vehicle->battery_current); tft.println(F(" A"));
-  tft.print(F("Battery(DMC) Voltage   : ")); tft.print(vehicle->battery_voltage); tft.println(F(" V"));
+  tft.print(F("Battery(DMC) Current   : ")); tft.print(vehicle->battery_current); tft.println(F(" A   "));
+  tft.print(F("Battery(DMC) Voltage   : ")); tft.print(vehicle->battery_voltage); tft.println(F(" V   "));
   tft.println();
-  tft.print(F("Speed : ")); tft.print(measurement->speed_measuring_shaft_sensor); tft.println(F(" rpm"));
-  tft.print(F("Torque: ")); tft.print(measurement->torque_measuring_shaft_sensor); tft.println(F(" Nm"));
+  tft.print(F("Speed : ")); tft.print(measurement->speed_measuring_shaft_sensor); tft.println(F(" rpm   "));
+  tft.print(F("Torque: ")); tft.print(measurement->torque_measuring_shaft_sensor); tft.println(F(" Nm   "));
   tft.println();
   double electrical_power_dmc_zoe = vehicle->battery_voltage*vehicle->battery_current;
   double mechanical_power_dmc_zoe = measurement->speed_measuring_shaft_sensor*measurement->torque_measuring_shaft_sensor*2*PI/60;
-  tft.print(F("Electrical Power DMC_ZOE    : ")); tft.print(electrical_power_dmc_zoe); tft.println(F(" W"));
-  tft.print(F("Mechanical Power DMC_ZOE    : ")); tft.print(mechanical_power_dmc_zoe); tft.println(F(" W"));
+  tft.print(F("Electrical Power DMC_ZOE    : ")); tft.print(electrical_power_dmc_zoe); tft.println(F(" W   "));
+  tft.print(F("Mechanical Power DMC_ZOE    : ")); tft.print(mechanical_power_dmc_zoe); tft.println(F(" W   "));
   double motor_efficiency_dmc_zoe;
   double generator_efficiency_dmc_zoe;
   if(mechanical_power_dmc_zoe<electrical_power_dmc_zoe){
@@ -238,8 +238,8 @@ void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* mot
     motor_efficiency_dmc_zoe = 0;
     generator_efficiency_dmc_zoe = electrical_power_dmc_zoe/mechanical_power_dmc_zoe;  
   }
-  tft.print(F("Motor Efficiency DMC_ZOE    : ")); tft.print(motor_efficiency_dmc_zoe); tft.println(F(" %"));
-  tft.print(F("Generator Efficiency DMC_ZOE: ")); tft.print(generator_efficiency_dmc_zoe); tft.println(F(" %"));
+  tft.print(F("Motor Efficiency DMC_ZOE    : ")); tft.print(motor_efficiency_dmc_zoe); tft.println(F(" %   "));
+  tft.print(F("Generator Efficiency DMC_ZOE: ")); tft.print(generator_efficiency_dmc_zoe); tft.println(F(" %   "));
 }
 
 void touch_task(){
@@ -361,7 +361,7 @@ void setup() {
   
   //set motor parameter
   motor_control_dmc_zoe.control_mode = 0; // 0 = speed controlled , 1 = torque controlled
-  motor_control_kelly_pmac.control_mode = 1; // 0 = speed controlled , 1 = torque controlled
+  motor_control_kelly_pmac.control_mode = 0; // 0 = speed controlled , 1 = torque controlled
 
   motor_control_dmc_zoe.kp_speed=1;
   motor_control_dmc_zoe.ki_speed=1;
