@@ -17,7 +17,7 @@
 
 // define bench limits
 #define TORQUE_MAX 10
-#define SPEED_MAX 500
+#define SPEED_MAX 8000 // 8000 rpm @48V PMAC
 #define EXCITATION_CURRENT_MAX 5
 
  // define constants
@@ -174,12 +174,7 @@ uint16_t read_adc_battery_current_sensor_3(uint8_t p) {
 uint16_t read_adc_excitation_current_sensor(uint8_t p) {
   return adc_measuring_dmc_current.readADC(EXCITATION_CURRENT_SENSOR_ZOE_PIN);
 };
-
-
-// define variables
-
-
-// define objects 
+ 
 
 // define a structure
 struct test_bench_def {  
@@ -343,7 +338,7 @@ String data_string_measurement (measurement_def* measurement){
   return measurement_data;
 }
 
-  // create pid controller
+// create pid controller
 #include <PID_v1.h> 
 PID dmc_zoe_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_dmc_zoe.speed_output, &motor_control_dmc_zoe.speed_setpoint, motor_control_dmc_zoe.kp_speed, motor_control_dmc_zoe.ki_speed, motor_control_dmc_zoe.kd_speed, P_ON_E, DIRECT);
 PID dmc_zoe_torque_pid(&measuring_shaft.torque_measuring_shaft_sensor, &motor_control_dmc_zoe.torque_output, &motor_control_dmc_zoe.torque_setpoint, motor_control_dmc_zoe.kp_torque, motor_control_dmc_zoe.ki_torque, motor_control_dmc_zoe.kd_torque, P_ON_E,DIRECT);
