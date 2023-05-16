@@ -193,8 +193,8 @@ struct test_bench_def {
 
 // define a structure
 struct vehicle_def {
-  double battery_voltage = 48;
-  double battery_current = 0.1;
+  double battery_voltage;
+  double battery_current;
 };
 
 // define a structure
@@ -343,11 +343,10 @@ String data_string_measurement (measurement_def* measurement){
   return measurement_data;
 }
 
-
-// create pid controller
+  // create pid controller
 #include <PID_v1.h> 
-PID dmc_zoe_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_dmc_zoe.speed_output, &motor_control_dmc_zoe.speed_setpoint, motor_control_dmc_zoe.kp_speed, motor_control_dmc_zoe.ki_speed, motor_control_dmc_zoe.kd_speed, DIRECT);
-PID dmc_zoe_torque_pid(&measuring_shaft.torque_measuring_shaft_sensor, &motor_control_dmc_zoe.torque_output, &motor_control_dmc_zoe.torque_setpoint, motor_control_dmc_zoe.kp_torque, motor_control_dmc_zoe.ki_torque, motor_control_dmc_zoe.kd_torque, DIRECT);
-PID excitation_current_pid(&motor_control_dmc_zoe.excitation_current_sensor, &motor_control_dmc_zoe.excitation_current_output, &motor_control_dmc_zoe.exication_current_setpoint, motor_control_dmc_zoe.kp_excitation_current, motor_control_dmc_zoe.ki_excitation_current, motor_control_dmc_zoe.kd_excitation_current, DIRECT);
-PID kelly_pmac_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_kelly_pmac.speed_output, &motor_control_kelly_pmac.speed_setpoint, motor_control_kelly_pmac.kp_speed, motor_control_kelly_pmac.ki_speed, motor_control_kelly_pmac.kd_speed, DIRECT);
-PID kelly_pmac_torque_pid(&measuring_shaft.torque_measuring_shaft_sensor, &motor_control_kelly_pmac.torque_output, &motor_control_kelly_pmac.torque_setpoint, motor_control_kelly_pmac.kp_torque, motor_control_kelly_pmac.ki_torque, motor_control_kelly_pmac.kd_torque, DIRECT);
+PID dmc_zoe_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_dmc_zoe.speed_output, &motor_control_dmc_zoe.speed_setpoint, motor_control_dmc_zoe.kp_speed, motor_control_dmc_zoe.ki_speed, motor_control_dmc_zoe.kd_speed, P_ON_E, DIRECT);
+PID dmc_zoe_torque_pid(&measuring_shaft.torque_measuring_shaft_sensor, &motor_control_dmc_zoe.torque_output, &motor_control_dmc_zoe.torque_setpoint, motor_control_dmc_zoe.kp_torque, motor_control_dmc_zoe.ki_torque, motor_control_dmc_zoe.kd_torque, P_ON_E,DIRECT);
+PID excitation_current_pid(&motor_control_dmc_zoe.excitation_current_sensor, &motor_control_dmc_zoe.excitation_current_output, &motor_control_dmc_zoe.exication_current_setpoint, motor_control_dmc_zoe.kp_excitation_current, motor_control_dmc_zoe.ki_excitation_current, motor_control_dmc_zoe.kd_excitation_current, P_ON_E, DIRECT);
+PID kelly_pmac_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_kelly_pmac.speed_output, &motor_control_kelly_pmac.speed_setpoint, motor_control_kelly_pmac.kp_speed, motor_control_kelly_pmac.ki_speed, motor_control_kelly_pmac.kd_speed, P_ON_E, DIRECT);
+PID kelly_pmac_torque_pid(&measuring_shaft.torque_measuring_shaft_sensor, &motor_control_kelly_pmac.torque_output, &motor_control_kelly_pmac.torque_setpoint, motor_control_kelly_pmac.kp_torque, motor_control_kelly_pmac.ki_torque, motor_control_kelly_pmac.kd_torque, P_ON_E, DIRECT);
