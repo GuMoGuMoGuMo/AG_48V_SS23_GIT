@@ -8,13 +8,6 @@
 //#include measuring cycles
 #include "measuring_cycles.h"
 
-/*
-// include FreeRTOS libs
-#include <Arduino_FreeRTOS.h>
-#include <task.h>
-#include <semphr.h>
-*/
-
 // define bench limits
 #define TORQUE_MAX 10
 #define SPEED_MAX 8000 // 8000 rpm @48V PMAC

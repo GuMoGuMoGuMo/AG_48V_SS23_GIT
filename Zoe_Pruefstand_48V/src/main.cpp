@@ -387,7 +387,7 @@ void setup() {
   excitation_current_sensor.autoMidPoint();   
 
   //set motor control mode
-  motor_control_dmc_zoe.control_mode = 0; // 0 = speed controlled , 1 = torque controlled
+  motor_control_dmc_zoe.control_mode = 1; // 0 = speed controlled , 1 = torque controlled
   motor_control_kelly_pmac.control_mode = 0; // 0 = speed controlled , 1 = torque controlled
 
   //set max torque, speed, excitation current DMC_ZOE
@@ -442,18 +442,7 @@ void setup() {
   kelly_pmac_torque_pid.SetOutputLimits(0, double(motor_control_kelly_pmac.torque_max));
   kelly_pmac_torque_pid.SetMode(AUTOMATIC);
   kelly_pmac_torque_pid.SetTunings(motor_control_kelly_pmac.kp_torque, motor_control_kelly_pmac.ki_torque, motor_control_kelly_pmac.kd_torque);
-
-  // create tasks
-  /*xTaskCreate(test_bench_task, "Analog Output Task", 100, NULL, 1, NULL);
-  xTaskCreate(vehicle_task, "Screen Task", 100, NULL, 1, NULL);
-  xTaskCreate(dmc_zoe_control_task, "Control Task", 100, NULL, 1, NULL);
-  xTaskCreate(kelly_pmac_control_task, "Control Task", 100, NULL, 1, NULL);
-  xTaskCreate(measurement_task, "Control Task", 100, NULL, 1, NULL);
-  xTaskCreate(screen_task, "Control Task", 100, NULL, 1, NULL);
-  // start scheduler
-  vTaskStartScheduler();
-  */
-  
+    
   // init buttons for touchscreen
   tft.fillScreen(ILI9341_BLACK);
   tft.setTextSize(1);
@@ -478,12 +467,33 @@ void setup() {
 // loop function
 void loop() {
   test_bench_task(&zoe_test_bench,&motor_control_dmc_zoe,&motor_control_kelly_pmac,(const measuring_cycle_def**)&measuring_cycle_1);
-  vehicle_task(&power_supply);
+  
+  measurement_task(&measuring_shaft);
   //dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
+  
+  vehicle_task(&power_supply);
+
   measurement_task(&measuring_shaft);
+  //dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
+  kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
+  
   touch_task(&zoe_test_bench);
+
+  measurement_task(&measuring_shaft);
+  //dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
+  kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
+
   screen_task(&motor_control_dmc_zoe,&motor_control_kelly_pmac,&power_supply,&measuring_shaft,&zoe_test_bench);
+
+  measurement_task(&measuring_shaft);
+  //dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
+  kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
+
   send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
+
+  measurement_task(&measuring_shaft);
+  //dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
+  kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
 }
   
