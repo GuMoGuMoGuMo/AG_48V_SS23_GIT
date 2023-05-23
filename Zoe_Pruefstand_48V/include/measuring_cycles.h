@@ -4,10 +4,20 @@ struct measuring_cycle_def {
     uint16_t time;       // Time in seconds
     uint16_t rpm;        // Revolutions per minute (rpm)
     uint16_t torque;     // Torque in Newton-meters (Nm)
-    float exitacion_current; // Excitacon Current in Ampere (A) 
+    float exitacion_current; // exitacion Current in Ampere (A) 
 };
 
-#define MEASURING_CYCLE_TABLE_SIZE 37
+#define MEASURING_CYCLE_TABLE_SIZE 5 //37
+
+struct measuring_cycle_def measuring_cycle_1[MEASURING_CYCLE_TABLE_SIZE] = {
+    {0, 0, 0, 0},
+    {5, 500, 0, 0},
+    {10, 500, 0, 0},
+    {15, 500, 0, 0},
+    {20, 0, 0, 0}
+};
+
+/*
 struct measuring_cycle_def measuring_cycle_1[MEASURING_CYCLE_TABLE_SIZE] = {
     {0, 0, 0, 2.0},
     {5, 0, 2, 2.0},
@@ -47,3 +57,4 @@ struct measuring_cycle_def measuring_cycle_1[MEASURING_CYCLE_TABLE_SIZE] = {
     {175, 500, 10, 2.0},
     {0, 0, 0, 2.0} 
 };
+*/

@@ -21,7 +21,7 @@
 #define R2_VOLTAGE_DIVIDER_U_BATT 5600
 
 // define measuring shaft constants
-#define SPEED_MODE_MEASURING_SHAFT 100
+#define SPEED_MODE_MEASURING_SHAFT 400 // rpm/V
 #define R1_VOLTAGE_DIVIDER_MEASURING_SHAFT 21.56e03
 #define R2_VOLTAGE_DIVIDER_MEASURING_SHAFT 21.37e03
 
@@ -171,12 +171,12 @@ uint16_t read_adc_excitation_current_sensor(uint8_t p) {
 
 // define a structure
 struct test_bench_def {  
-  bool mode = 0; // 1:automatik 0:manuell
+  bool mode = 1; // 1:automatik 0:manuell
   bool start = 0; // 1: ja 0: nein
-  uint16_t measuring_cycle_start_time = 0;
-  uint16_t time = 0;
+  double measuring_cycle_start_time = 0;
+  double time = 0;
   bool stop = 0; // 1: ja 0: nein
-  bool measuring_cycle = 1; // 0: deactivated 1:activated
+  bool measuring_cycle = 0; // 0: deactivated 1:activated
 };
 
 // define a structure
