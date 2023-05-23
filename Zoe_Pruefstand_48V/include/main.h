@@ -172,7 +172,7 @@ uint16_t read_adc_excitation_current_sensor(uint8_t p) {
 // define a structure
 struct test_bench_def {  
   bool mode = 1; // 1:automatik 0:manuell
-  bool start = 0; // 1: ja 0: nein
+  bool start = 1; // 1: ja 0: nein
   double measuring_cycle_start_time = 0;
   double time = 0;
   bool stop = 0; // 1: ja 0: nein

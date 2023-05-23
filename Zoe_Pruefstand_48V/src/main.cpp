@@ -15,17 +15,18 @@ void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_contro
     if (test_bench->measuring_cycle){ //if condition to go to pre def meas cycle reading 
       const struct measuring_cycle_def* closest_entry = NULL;  
       // Iterate through the table using the provided pointer
-      size_t last_entry;
+      size_t last_entry = 0;
+      
       for (size_t i = 0; i < table_size; ++i) {
-          const struct measuring_cycle_def* entry_ptr = table_ptr + i;
-          // Check if the entry's time has already passed
-          if (entry_ptr->time <= (test_bench->time-test_bench->measuring_cycle_start_time)) {
-            // Check if the current entry has a smaller time than the previous closest entry
-            if (closest_entry == NULL || entry_ptr->time > closest_entry->time) {
-              closest_entry = entry_ptr;
-              last_entry = i;
-            }
+        const struct measuring_cycle_def* entry_ptr = table_ptr + i;
+        // Check if the entry's time has already passed
+        if (entry_ptr->time <= (test_bench->time-test_bench->measuring_cycle_start_time)) {
+          // Check if the current entry has a smaller time than the previous closest entry
+          if (closest_entry == NULL || entry_ptr->time > closest_entry->time) {
+            closest_entry = entry_ptr;
+            last_entry = i;
           }
+        }
       }  
       if (closest_entry != NULL && last_entry != table_size-1) {
           // write the values of the closest entry to the current time
@@ -37,6 +38,7 @@ void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_contro
       } else {
           // No matching entry found, set measuring cycle to 0
           test_bench->measuring_cycle = 0;
+          test_bench->stop = 1;
       }
     }  
     if(test_bench->stop){ // condition to stop meassuring cycle setting all PID setpoints to 0
@@ -418,12 +420,12 @@ void setup() {
   motor_control_dmc_zoe.kd_torque=0;
 
   // set PID Parameter Kelly_PMAC
-  motor_control_kelly_pmac.kp_speed=10;
-  motor_control_kelly_pmac.ki_speed=0;
+  motor_control_kelly_pmac.kp_speed=2;
+  motor_control_kelly_pmac.ki_speed=11;
   motor_control_kelly_pmac.kd_speed=0;
 
-  motor_control_kelly_pmac.kp_torque=2;
-  motor_control_kelly_pmac.ki_torque=1;
+  motor_control_kelly_pmac.kp_torque=1;
+  motor_control_kelly_pmac.ki_torque=0;
   motor_control_kelly_pmac.kd_torque=0;
 
   // initialize pid controllers
@@ -489,14 +491,14 @@ void loop() {
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
   send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
   
-  touch_task(&zoe_test_bench);
+  //touch_task(&zoe_test_bench);
 
   measurement_task(&measuring_shaft);
   //dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
   send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
 
-  screen_task(&motor_control_dmc_zoe,&motor_control_kelly_pmac,&power_supply,&measuring_shaft,&zoe_test_bench);
+  //screen_task(&motor_control_dmc_zoe,&motor_control_kelly_pmac,&power_supply,&measuring_shaft,&zoe_test_bench);
   
   measurement_task(&measuring_shaft);
   //dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);

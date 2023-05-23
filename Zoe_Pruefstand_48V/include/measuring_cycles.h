@@ -11,9 +11,9 @@ struct measuring_cycle_def {
 
 struct measuring_cycle_def measuring_cycle_1[MEASURING_CYCLE_TABLE_SIZE] = {
     {0, 0, 0, 0},
-    {5, 500, 0, 0},
-    {10, 500, 0, 0},
-    {15, 500, 0, 0},
+    {5, 1000, 0, 0},
+    {10, 1000, 0, 0},
+    {15, 1000, 0, 0},
     {20, 0, 0, 0}
 };
 
@@ -58,3 +58,4 @@ struct measuring_cycle_def measuring_cycle_1[MEASURING_CYCLE_TABLE_SIZE] = {
     {0, 0, 0, 2.0} 
 };
 */
+
