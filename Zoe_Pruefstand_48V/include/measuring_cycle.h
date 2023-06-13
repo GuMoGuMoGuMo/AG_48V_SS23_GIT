@@ -7,8 +7,8 @@ struct measuring_cycle_def {
     float exitacion_current; // exitacion Current in Ampere (A) 
 };
 
-#define MEASURING_CYCLE_TABLE_SIZE 5 //37
-
+#define MEASURING_CYCLE_TABLE_SIZE 37
+/*
 struct measuring_cycle_def measuring_cycle_1[MEASURING_CYCLE_TABLE_SIZE] = {
     {0, 0, 0, 0},
     {5, 1000, 0, 0},
@@ -16,9 +16,9 @@ struct measuring_cycle_def measuring_cycle_1[MEASURING_CYCLE_TABLE_SIZE] = {
     {15, 1000, 0, 0},
     {20, 0, 0, 0}
 };
+*/
 
-/*
-struct measuring_cycle_def measuring_cycle_1[MEASURING_CYCLE_TABLE_SIZE] = {
+struct measuring_cycle_def measuring_cycle_table[MEASURING_CYCLE_TABLE_SIZE] = {
     {0, 0, 0, 2.0},
     {5, 0, 2, 2.0},
     {10, 0, 4, 2.0},
@@ -57,5 +57,3 @@ struct measuring_cycle_def measuring_cycle_1[MEASURING_CYCLE_TABLE_SIZE] = {
     {175, 500, 10, 2.0},
     {0, 0, 0, 2.0} 
 };
-*/
-

@@ -6,11 +6,11 @@
 #include <stdint.h>
 
 //#include measuring cycles
-#include "measuring_cycles.h"
+#include "measuring_cycle.h"
 
 // define bench limits
-#define TORQUE_MAX 10
-#define SPEED_MAX 8000 // 8000 rpm @48V PMAC
+#define TORQUE_MAX 40
+#define SPEED_MAX 5000 // 8000 rpm @48V PMAC
 #define EXCITATION_CURRENT_MAX 5
 
  // define constants
@@ -30,7 +30,9 @@
 #define R3_LM358_OP_AMP 3.24e03
 #define R4_LM358_OP_AMP 3.29e03
 
-#define TORQUE_OFFSET 1.92
+double torque_offset;
+double speed_offset;
+
 #define U_SUPPLY_MEASURING_CIRCUIT 9.9
 #define deltaM 10 //delta M in Nm/V
 
@@ -45,6 +47,7 @@
 #define SWITCH_EGAS_DMC_PIN 28
 
 #define FOOT_SWITCH_DMC_PIN 26
+#define BRAKE_SWITCH_DMC_PIN 40
 
 #define PWM_EXCITATION_CURRENT_ZOE_PIN A13
 
@@ -62,7 +65,6 @@
 #include <SPI.h>
 #include <stdint.h>
 #include <TouchScreen.h>
-#include <Adafruit_GFX.h>
 #include <Adafruit_ILI9341.h>
 #include "hs_esslingen_logo_bitmap.h"
 
@@ -171,8 +173,8 @@ uint16_t read_adc_excitation_current_sensor(uint8_t p) {
 
 // define a structure
 struct test_bench_def {  
-  bool mode = 1; // 1:automatik 0:manuell
-  bool start = 1; // 1: ja 0: nein
+  bool mode = 0; // 1:automatik 0:manuell
+  bool start = 0; // 1: ja 0: nein
   double measuring_cycle_start_time = 0;
   double time = 0;
   bool stop = 0; // 1: ja 0: nein
