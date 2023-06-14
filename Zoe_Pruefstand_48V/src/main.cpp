@@ -3,73 +3,76 @@
 // define tasks
 
 void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_control_dmc_zoe,motor_control_def* motor_control_kelly_pmac,const struct measuring_cycle_def* table_ptr, size_t table_size) {
-  // test_bench_task
-  test_bench->time = millis()/1000; // set current time
+  if (millis()-last_time_test_bench_task>MIN_TIME_BETWEEN_TEST_BENCH_TASK_EXEC){ //minimum time  between exec is set to save cpu capacity for the control tasks
+    // test_bench_task
+    test_bench->time = millis()/1000; // set current time
 
-  if (test_bench->mode) { // mode=1 automatic; mode=0 manual
-    if(test_bench->start) { // start measuring cycle
-      test_bench->measuring_cycle = 1; // acitvate measuring cycle
-      test_bench->measuring_cycle_start_time = millis()/1000; // set start time
-      test_bench->start = 0; // reset start variable
-    }  
-    if (test_bench->measuring_cycle){ //if condition to go to pre def meas cycle reading 
-      const struct measuring_cycle_def* closest_entry = NULL;  
-      // Iterate through the table using the provided pointer
-      size_t last_entry = 0;
-      
-      for (size_t i = 0; i < table_size; ++i) {
-        const struct measuring_cycle_def* entry_ptr = table_ptr + i;
-        // Check if the entry's time has already passed
-        if (entry_ptr->time <= (test_bench->time-test_bench->measuring_cycle_start_time)) {
-          // Check if the current entry has a smaller time than the previous closest entry
-          if (closest_entry == NULL || entry_ptr->time > closest_entry->time) {
-            closest_entry = entry_ptr;
-            last_entry = i;
+    if (test_bench->mode) { // mode=1 automatic; mode=0 manual
+      if(test_bench->start) { // start measuring cycle
+        test_bench->measuring_cycle = 1; // acitvate measuring cycle
+        test_bench->measuring_cycle_start_time = millis()/1000; // set start time
+        test_bench->start = 0; // reset start variable
+      }  
+      if (test_bench->measuring_cycle){ //if condition to go to pre def meas cycle reading 
+        const struct measuring_cycle_def* closest_entry = NULL;  
+        // Iterate through the table using the provided pointer
+        size_t last_entry = 0;
+        
+        for (size_t i = 0; i < table_size; ++i) {
+          const struct measuring_cycle_def* entry_ptr = table_ptr + i;
+          // Check if the entry's time has already passed
+          if (entry_ptr->time <= (test_bench->time-test_bench->measuring_cycle_start_time)) {
+            // Check if the current entry has a smaller time than the previous closest entry
+            if (closest_entry == NULL || entry_ptr->time > closest_entry->time) {
+              closest_entry = entry_ptr;
+              last_entry = i;
+            }
           }
+        }  
+        if (closest_entry != NULL && last_entry != table_size-1) {
+            // write the values of the closest entry to the current time
+            motor_control_dmc_zoe->speed_setpoint = closest_entry->rpm;
+            motor_control_kelly_pmac->speed_setpoint = closest_entry->rpm;
+            motor_control_dmc_zoe->torque_setpoint = closest_entry->torque;
+            motor_control_kelly_pmac->torque_setpoint = closest_entry->torque;
+            motor_control_dmc_zoe->exication_current_setpoint = closest_entry->exitacion_current;
+        } else {
+            // No matching entry found, set measuring cycle to 0
+            test_bench->measuring_cycle = 0;
+            test_bench->stop = 1;
         }
       }  
-      if (closest_entry != NULL && last_entry != table_size-1) {
-          // write the values of the closest entry to the current time
-          motor_control_dmc_zoe->speed_setpoint = closest_entry->rpm;
-          motor_control_kelly_pmac->speed_setpoint = closest_entry->rpm;
-          motor_control_dmc_zoe->torque_setpoint = closest_entry->torque;
-          motor_control_kelly_pmac->torque_setpoint = closest_entry->torque;
-          motor_control_dmc_zoe->exication_current_setpoint = closest_entry->exitacion_current;
-      } else {
-          // No matching entry found, set measuring cycle to 0
-          test_bench->measuring_cycle = 0;
-          test_bench->stop = 1;
+      if(test_bench->stop){ // condition to stop meassuring cycle setting all PID setpoints to 0
+        test_bench->stop = 0;
+        test_bench->measuring_cycle = 0;
+        motor_control_dmc_zoe->speed_setpoint = 0;
+        motor_control_kelly_pmac->speed_setpoint = 0;
+        motor_control_dmc_zoe->torque_setpoint = 0;
+        motor_control_kelly_pmac->torque_setpoint = 0;
+        motor_control_dmc_zoe->exication_current_setpoint = 0;
       }
     }  
-    if(test_bench->stop){ // condition to stop meassuring cycle setting all PID setpoints to 0
-      test_bench->stop = 0;
-      test_bench->measuring_cycle = 0;
-      motor_control_dmc_zoe->speed_setpoint = 0;
-      motor_control_kelly_pmac->speed_setpoint = 0;
-      motor_control_dmc_zoe->torque_setpoint = 0;
-      motor_control_kelly_pmac->torque_setpoint = 0;
-      motor_control_dmc_zoe->exication_current_setpoint = 0;
-    }
-  }  
-  else { // manual mode
-    // read excitation_current_poti
-    motor_control_dmc_zoe->excitation_current_poti_sensor = 100 - round(analogRead(EXCITATION_CURRENT_POTI_ZOE_PIN)/1024.0*100.0);
-    //read throttle_poti_dmc_zoe
-    motor_control_dmc_zoe->throttle_poti_sensor = 100 - round(analogRead(POTI_THROTTLE_DMC_PIN)/1024.0*100.0); // 0...100
-    //read break_poti_dmc_zoe
-    motor_control_dmc_zoe->brake_poti_sensor = 100 - round(analogRead(POTI_BRAKE_DMC_PIN)/1024.0*100.0); // 0...100
-    //read throttle_poti_kelly_pmac
-    motor_control_kelly_pmac->throttle_poti_sensor = 100 - round(analogRead(POTI_THROTTLE_KELLY_PIN)/1024.0*100.0); // 0...100
-    //read brake_poti_kelly_pmac
-    motor_control_kelly_pmac->brake_poti_sensor = 100 - round(analogRead(POTI_BRAKE_KELLY_PIN)/1024.0*100.0); // 0...100
+    else { // manual mode
+      // read excitation_current_poti
+      motor_control_dmc_zoe->excitation_current_poti_sensor = 100 - round(analogRead(EXCITATION_CURRENT_POTI_ZOE_PIN)/1024.0*100.0);
+      //read throttle_poti_dmc_zoe
+      motor_control_dmc_zoe->throttle_poti_sensor = 100 - round(analogRead(POTI_THROTTLE_DMC_PIN)/1024.0*100.0); // 0...100
+      //read break_poti_dmc_zoe
+      motor_control_dmc_zoe->brake_poti_sensor = 100 - round(analogRead(POTI_BRAKE_DMC_PIN)/1024.0*100.0); // 0...100
+      //read throttle_poti_kelly_pmac
+      motor_control_kelly_pmac->throttle_poti_sensor = 100 - round(analogRead(POTI_THROTTLE_KELLY_PIN)/1024.0*100.0); // 0...100
+      //read brake_poti_kelly_pmac
+      motor_control_kelly_pmac->brake_poti_sensor = 100 - round(analogRead(POTI_BRAKE_KELLY_PIN)/1024.0*100.0); // 0...100
 
-    // calculate Setpoints for PID-Controllers
-    motor_control_dmc_zoe->speed_setpoint = (motor_control_dmc_zoe->throttle_poti_sensor-motor_control_dmc_zoe->brake_poti_sensor)/100.0*motor_control_dmc_zoe->speed_max;
-    motor_control_dmc_zoe->torque_setpoint = (motor_control_dmc_zoe->throttle_poti_sensor-motor_control_dmc_zoe->brake_poti_sensor)/100.0*motor_control_dmc_zoe->torque_max;
-    motor_control_dmc_zoe->exication_current_setpoint = motor_control_dmc_zoe->excitation_current_poti_sensor/100.0*motor_control_dmc_zoe->excitation_current_max;
-    motor_control_kelly_pmac->speed_setpoint = (motor_control_kelly_pmac->throttle_poti_sensor-motor_control_kelly_pmac->brake_poti_sensor)/100.0*motor_control_kelly_pmac->speed_max;
-    motor_control_kelly_pmac->torque_setpoint = (motor_control_kelly_pmac->throttle_poti_sensor-motor_control_kelly_pmac->brake_poti_sensor)/100.0*motor_control_kelly_pmac->torque_max;
-  }
+      // calculate Setpoints for PID-Controllers
+      motor_control_dmc_zoe->speed_setpoint = (motor_control_dmc_zoe->throttle_poti_sensor-motor_control_dmc_zoe->brake_poti_sensor)/100.0*motor_control_dmc_zoe->speed_max;
+      motor_control_dmc_zoe->torque_setpoint = (motor_control_dmc_zoe->throttle_poti_sensor-motor_control_dmc_zoe->brake_poti_sensor)/100.0*motor_control_dmc_zoe->torque_max;
+      motor_control_dmc_zoe->exication_current_setpoint = motor_control_dmc_zoe->excitation_current_poti_sensor/100.0*motor_control_dmc_zoe->excitation_current_max;
+      motor_control_kelly_pmac->speed_setpoint = (motor_control_kelly_pmac->throttle_poti_sensor-motor_control_kelly_pmac->brake_poti_sensor)/100.0*motor_control_kelly_pmac->speed_max;
+      motor_control_kelly_pmac->torque_setpoint = (motor_control_kelly_pmac->throttle_poti_sensor-motor_control_kelly_pmac->brake_poti_sensor)/100.0*motor_control_kelly_pmac->torque_max;
+    }
+    last_time_test_bench_task = millis();  
+  }  
 }
 
 void vehicle_task(vehicle_def* vehicle) {
@@ -200,112 +203,117 @@ void measurement_task(measurement_def* measurement) {
 }
 
 void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* motor_control_kelly_pmac ,vehicle_def* vehicle,measurement_def* measurement,test_bench_def* test_bench) {
-    // screen_task
-    // Display:
-    // Zoe Testbench        
-    // Mode = auto/manual
-    // Start/Restart Measuring Cycle = activated/deactivated
-    // Stop Measuring Cycle = activated/deactivated
-    // Measuring Cycle = aktiv/ inaktiv
-    // Controll Mode DMC_ZOE = Torque/Speed
-    // Cotroll Modus KELLY_PMAC = Torque/Speed
-    // Excitation Current = A
-    // Speed = rpm
-    // Torque = N
-    // Electrical Power DMC_ZOE = W
-    // Mechanical Power DMC_ZOE = W
-    // Motor Efficiency DMC_ZOE = %
-    // Generator Efficiency DMC_ZOE = %
-  tft.setCursor(2, 2);
-  tft.setTextSize(3);
-  tft.setTextColor(ILI9341_WHITE,ILI9341_BLACK);
-  tft.println(F("AG48V Test Bench"));
-  tft.setTextSize(1);
-  tft.print(F("Mode                    : ")); tft.print(test_bench->mode); tft.println(F(" (0 = manual, 1 = auto)"));
-  tft.print(F("Start Measuring Cycle   : ")); tft.print(test_bench->start); tft.println(F(" (0 = no, 1 = yes)"));
-  tft.print(F("Stop Measuring Cycle    : ")); tft.print(test_bench->stop); tft.println(F(" (0 = no, 1 = yes)"));
-  tft.print(F("Measuring Cycle         : ")); tft.print(test_bench->measuring_cycle); tft.println(F(" (0 = inactive, 1 = active)"));
-  tft.print(F("Controll Mode DMC_ZOE   : ")); tft.print(motor_control_dmc_zoe->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
-  tft.print(F("Controll Mode KELLY_PMAC: ")); tft.print(motor_control_kelly_pmac->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
-  tft.println();
-  tft.print(F("Excitation Current     : ")); tft.print(motor_control_dmc_zoe->excitation_current_sensor); tft.println(F(" A  "));
-  tft.println();
-  tft.print(F("Battery(DMC) Current   : ")); tft.print(vehicle->battery_current); tft.println(F(" A   "));
-  tft.print(F("Battery(DMC) Voltage   : ")); tft.print(vehicle->battery_voltage); tft.println(F(" V   "));
-  tft.println();
-  tft.print(F("Speed : ")); tft.print(measurement->speed_measuring_shaft_sensor); tft.println(F(" rpm   "));
-  tft.print(F("Torque: ")); tft.print(measurement->torque_measuring_shaft_sensor); tft.println(F(" Nm   "));
-  tft.println();
-  double electrical_power_dmc_zoe = vehicle->battery_voltage*vehicle->battery_current;
-  double mechanical_power_dmc_zoe = measurement->speed_measuring_shaft_sensor*measurement->torque_measuring_shaft_sensor*2*PI/60;
-  tft.print(F("Electrical Power DMC_ZOE    : ")); tft.print(electrical_power_dmc_zoe); tft.println(F(" W   "));
-  tft.print(F("Mechanical Power DMC_ZOE    : ")); tft.print(mechanical_power_dmc_zoe); tft.println(F(" W   "));
-  double motor_efficiency_dmc_zoe;
-  double generator_efficiency_dmc_zoe;
-  if(mechanical_power_dmc_zoe<electrical_power_dmc_zoe){
-    motor_efficiency_dmc_zoe = mechanical_power_dmc_zoe/electrical_power_dmc_zoe;
-    generator_efficiency_dmc_zoe = 0;
-  }
-  else{
-    motor_efficiency_dmc_zoe = 0;
-    generator_efficiency_dmc_zoe = electrical_power_dmc_zoe/mechanical_power_dmc_zoe;  
-  }
-  tft.print(F("Motor Efficiency DMC_ZOE    : ")); tft.print(motor_efficiency_dmc_zoe); tft.println(F(" %   "));
-  tft.print(F("Generator Efficiency DMC_ZOE: ")); tft.print(generator_efficiency_dmc_zoe); tft.println(F(" %   "));
+  if (millis()-last_time_screen_task>MIN_TIME_BETWEEN_SCREEN_TASK_EXEC){ //minimum time  between exec is set to save cpu capacity for the control tasks
+      // screen_task
+      // Display:
+      // Zoe Testbench        
+      // Mode = auto/manual
+      // Start/Restart Measuring Cycle = activated/deactivated
+      // Stop Measuring Cycle = activated/deactivated
+      // Measuring Cycle = aktiv/ inaktiv
+      // Controll Mode DMC_ZOE = Torque/Speed
+      // Cotroll Modus KELLY_PMAC = Torque/Speed
+      // Excitation Current = A
+      // Speed = rpm
+      // Torque = N
+      // Electrical Power DMC_ZOE = W
+      // Mechanical Power DMC_ZOE = W
+      // Motor Efficiency DMC_ZOE = %
+      // Generator Efficiency DMC_ZOE = %
+    tft.setCursor(2, 2);
+    tft.setTextSize(3);
+    tft.setTextColor(ILI9341_WHITE,ILI9341_BLACK);
+    tft.println(F("AG48V Test Bench"));
+    tft.setTextSize(1);
+    tft.print(F("Mode                    : ")); tft.print(test_bench->mode); tft.println(F(" (0 = manual, 1 = auto)"));
+    tft.print(F("Start Measuring Cycle   : ")); tft.print(test_bench->start); tft.println(F(" (0 = no, 1 = yes)"));
+    tft.print(F("Stop Measuring Cycle    : ")); tft.print(test_bench->stop); tft.println(F(" (0 = no, 1 = yes)"));
+    tft.print(F("Measuring Cycle         : ")); tft.print(test_bench->measuring_cycle); tft.println(F(" (0 = inactive, 1 = active)"));
+    tft.print(F("Controll Mode DMC_ZOE   : ")); tft.print(motor_control_dmc_zoe->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
+    tft.print(F("Controll Mode KELLY_PMAC: ")); tft.print(motor_control_kelly_pmac->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
+    tft.println();
+    tft.print(F("Excitation Current     : ")); tft.print(motor_control_dmc_zoe->excitation_current_sensor); tft.println(F(" A  "));
+    tft.println();
+    tft.print(F("Battery(DMC) Current   : ")); tft.print(vehicle->battery_current); tft.println(F(" A   "));
+    tft.print(F("Battery(DMC) Voltage   : ")); tft.print(vehicle->battery_voltage); tft.println(F(" V   "));
+    tft.println();
+    tft.print(F("Speed : ")); tft.print(measurement->speed_measuring_shaft_sensor); tft.println(F(" rpm   "));
+    tft.print(F("Torque: ")); tft.print(measurement->torque_measuring_shaft_sensor); tft.println(F(" Nm   "));
+    tft.println();
+    double electrical_power_dmc_zoe = vehicle->battery_voltage*vehicle->battery_current;
+    double mechanical_power_dmc_zoe = measurement->speed_measuring_shaft_sensor*measurement->torque_measuring_shaft_sensor*2*PI/60;
+    tft.print(F("Electrical Power DMC_ZOE    : ")); tft.print(electrical_power_dmc_zoe); tft.println(F(" W   "));
+    tft.print(F("Mechanical Power DMC_ZOE    : ")); tft.print(mechanical_power_dmc_zoe); tft.println(F(" W   "));
+    double motor_efficiency_dmc_zoe;
+    double generator_efficiency_dmc_zoe;
+    if(mechanical_power_dmc_zoe<electrical_power_dmc_zoe){
+      motor_efficiency_dmc_zoe = mechanical_power_dmc_zoe/electrical_power_dmc_zoe;
+      generator_efficiency_dmc_zoe = 0;
+    }
+    else{
+      motor_efficiency_dmc_zoe = 0;
+      generator_efficiency_dmc_zoe = electrical_power_dmc_zoe/mechanical_power_dmc_zoe;  
+    }
+    tft.print(F("Motor Efficiency DMC_ZOE    : ")); tft.print(motor_efficiency_dmc_zoe); tft.println(F(" %   "));
+    tft.print(F("Generator Efficiency DMC_ZOE: ")); tft.print(generator_efficiency_dmc_zoe); tft.println(F(" %   "));
+  last_time_screen_task = millis();
+  }  
 }
 
 void touch_task(test_bench_def* test_bench){
-  //touch task
-  TSPoint t;    // create touch variable to save not calibrated touch points
-  t=ts.getPoint();    // read touch points
-  if (t.z > ts.pressureThreshhold) {    //if touch pressure is higher than treshold its a touch event
-    touchPoint.x=map(t.y,Y_MAX,Y_MIN,0,ILI9341_TFTHEIGHT); // Kalibrierung und Speichern in globaler Variable
-    touchPoint.y=map(t.x,X_MIN,X_MAX,0,ILI9341_TFTWIDTH); // Kalibrierung und Speichern in globaler Variable
-    
-    // Show Coordinates on serial monitor for debugging
-    //Serial.print("X = "); Serial.print(touchPoint.x);
-    //Serial.print("\tY = "); Serial.print(touchPoint.y);
-    //Serial.print("\tPressure = "); Serial.println(t.z);
-    
-    // check if button 1 is pressed
-    if (touchPoint.x > BUTTON1_TOP_LEFT_X && touchPoint.x <(BUTTON1_TOP_LEFT_X+BUTTON1_WIDTH) && touchPoint.y >BUTTON1_TOP_LEFT_Y && touchPoint.y <(BUTTON1_TOP_LEFT_Y+BUTTON1_HEIGHT)){ // mode button
-      tft.drawRect(BUTTON1_TOP_LEFT_X,BUTTON1_TOP_LEFT_Y,BUTTON1_WIDTH,BUTTON1_HEIGHT,ILI9341_BLUE);
-      tft.drawRect(BUTTON2_TOP_LEFT_X,BUTTON2_TOP_LEFT_Y,BUTTON2_WIDTH,BUTTON2_HEIGHT,ILI9341_WHITE);
-      tft.drawRect(BUTTON3_TOP_LEFT_X,BUTTON3_TOP_LEFT_Y,BUTTON3_WIDTH,BUTTON3_HEIGHT,ILI9341_WHITE);
-      if(test_bench->mode){
-        test_bench->mode = 0; // set mode
-      }
-      else{
-        test_bench->mode = 1; // set mode
-      }
-    }
-
-    // check if button 2 is pressed
-    if (touchPoint.x > BUTTON2_TOP_LEFT_X && touchPoint.x <(BUTTON2_TOP_LEFT_X+BUTTON2_WIDTH) && touchPoint.y >BUTTON2_TOP_LEFT_Y && touchPoint.y <(BUTTON2_TOP_LEFT_Y+BUTTON2_HEIGHT)){ // start button
-      tft.drawRect(BUTTON1_TOP_LEFT_X,BUTTON1_TOP_LEFT_Y,BUTTON1_WIDTH,BUTTON1_HEIGHT,ILI9341_WHITE);
-      tft.drawRect(BUTTON2_TOP_LEFT_X,BUTTON2_TOP_LEFT_Y,BUTTON2_WIDTH,BUTTON2_HEIGHT,ILI9341_BLUE);
-      tft.drawRect(BUTTON3_TOP_LEFT_X,BUTTON3_TOP_LEFT_Y,BUTTON3_WIDTH,BUTTON3_HEIGHT,ILI9341_WHITE);
-      if(test_bench->start){
-        test_bench->start = 0; //set start
-      }
-      else{
-        test_bench->start = 1; //set start
-      }
-    }
-
-    // check if button 3 is pressed
-    if (touchPoint.x > BUTTON3_TOP_LEFT_X && touchPoint.x <(BUTTON3_TOP_LEFT_X+BUTTON3_WIDTH) && touchPoint.y >BUTTON3_TOP_LEFT_Y && touchPoint.y <(BUTTON3_TOP_LEFT_Y+BUTTON3_HEIGHT)){ // stop button
-      tft.drawRect(BUTTON1_TOP_LEFT_X,BUTTON1_TOP_LEFT_Y,BUTTON1_WIDTH,BUTTON1_HEIGHT,ILI9341_WHITE);
-      tft.drawRect(BUTTON2_TOP_LEFT_X,BUTTON2_TOP_LEFT_Y,BUTTON2_WIDTH,BUTTON2_HEIGHT,ILI9341_WHITE);
-      tft.drawRect(BUTTON3_TOP_LEFT_X,BUTTON3_TOP_LEFT_Y,BUTTON3_WIDTH,BUTTON3_HEIGHT,ILI9341_BLUE);
-      if(test_bench->stop){
-        test_bench->stop = 0; // set stop
-      }
-      else{
-        test_bench->stop = 1; // set stop
-      }
-    }
+  if (millis()-last_time_touch_task>MIN_TIME_BETWEEN_TOUCH_TASK_EXEC){ //minimum time  between exec is set to save cpu capacity for the control tasks
+    //touch task
+    TSPoint t;    // create touch variable to save not calibrated touch points
+    t=ts.getPoint();    // read touch points
+    if (t.z > ts.pressureThreshhold) {    //if touch pressure is higher than treshold its a touch event
+      touchPoint.x=map(t.y,Y_MAX,Y_MIN,0,ILI9341_TFTHEIGHT); // Kalibrierung und Speichern in globaler Variable
+      touchPoint.y=map(t.x,X_MIN,X_MAX,0,ILI9341_TFTWIDTH); // Kalibrierung und Speichern in globaler Variable
       
+      // Show Coordinates on serial monitor for debugging
+      //Serial.print("X = "); Serial.print(touchPoint.x);
+      //Serial.print("\tY = "); Serial.print(touchPoint.y);
+      //Serial.print("\tPressure = "); Serial.println(t.z);
+      
+      // check if button 1 is pressed
+      if (touchPoint.x > BUTTON1_TOP_LEFT_X && touchPoint.x <(BUTTON1_TOP_LEFT_X+BUTTON1_WIDTH) && touchPoint.y >BUTTON1_TOP_LEFT_Y && touchPoint.y <(BUTTON1_TOP_LEFT_Y+BUTTON1_HEIGHT)){ // mode button
+        tft.drawRect(BUTTON1_TOP_LEFT_X,BUTTON1_TOP_LEFT_Y,BUTTON1_WIDTH,BUTTON1_HEIGHT,ILI9341_BLUE);
+        tft.drawRect(BUTTON2_TOP_LEFT_X,BUTTON2_TOP_LEFT_Y,BUTTON2_WIDTH,BUTTON2_HEIGHT,ILI9341_WHITE);
+        tft.drawRect(BUTTON3_TOP_LEFT_X,BUTTON3_TOP_LEFT_Y,BUTTON3_WIDTH,BUTTON3_HEIGHT,ILI9341_WHITE);
+        if(test_bench->mode){
+          test_bench->mode = 0; // set mode
+        }
+        else{
+          test_bench->mode = 1; // set mode
+        }
+      }
+
+      // check if button 2 is pressed
+      if (touchPoint.x > BUTTON2_TOP_LEFT_X && touchPoint.x <(BUTTON2_TOP_LEFT_X+BUTTON2_WIDTH) && touchPoint.y >BUTTON2_TOP_LEFT_Y && touchPoint.y <(BUTTON2_TOP_LEFT_Y+BUTTON2_HEIGHT)){ // start button
+        tft.drawRect(BUTTON1_TOP_LEFT_X,BUTTON1_TOP_LEFT_Y,BUTTON1_WIDTH,BUTTON1_HEIGHT,ILI9341_WHITE);
+        tft.drawRect(BUTTON2_TOP_LEFT_X,BUTTON2_TOP_LEFT_Y,BUTTON2_WIDTH,BUTTON2_HEIGHT,ILI9341_BLUE);
+        tft.drawRect(BUTTON3_TOP_LEFT_X,BUTTON3_TOP_LEFT_Y,BUTTON3_WIDTH,BUTTON3_HEIGHT,ILI9341_WHITE);
+        if(test_bench->start){
+          test_bench->start = 0; //set start
+        }
+        else{
+          test_bench->start = 1; //set start
+        }
+      }
+
+      // check if button 3 is pressed
+      if (touchPoint.x > BUTTON3_TOP_LEFT_X && touchPoint.x <(BUTTON3_TOP_LEFT_X+BUTTON3_WIDTH) && touchPoint.y >BUTTON3_TOP_LEFT_Y && touchPoint.y <(BUTTON3_TOP_LEFT_Y+BUTTON3_HEIGHT)){ // stop button
+        tft.drawRect(BUTTON1_TOP_LEFT_X,BUTTON1_TOP_LEFT_Y,BUTTON1_WIDTH,BUTTON1_HEIGHT,ILI9341_WHITE);
+        tft.drawRect(BUTTON2_TOP_LEFT_X,BUTTON2_TOP_LEFT_Y,BUTTON2_WIDTH,BUTTON2_HEIGHT,ILI9341_WHITE);
+        tft.drawRect(BUTTON3_TOP_LEFT_X,BUTTON3_TOP_LEFT_Y,BUTTON3_WIDTH,BUTTON3_HEIGHT,ILI9341_BLUE);
+        if(test_bench->stop){
+          test_bench->stop = 0; // set stop
+        }
+        else{
+          test_bench->stop = 1; // set stop
+        }
+      }  
+    }
+    last_time_touch_task = millis();
   }
 }
 
@@ -486,37 +494,18 @@ void setup() {
 
 // loop function
 void loop() {
+
+  //tasks that have a max frequqncy 
   test_bench_task(&zoe_test_bench,&motor_control_dmc_zoe,&motor_control_kelly_pmac, measuring_cycle_table, MEASURING_CYCLE_TABLE_SIZE);
-  
-  measurement_task(&measuring_shaft);
-  dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
-  kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
-  //send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
-  
-  vehicle_task(&power_supply);
-
-  measurement_task(&measuring_shaft);
-  dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
-  kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
-  //send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
-  
-  //touch_task(&zoe_test_bench);
-
-  measurement_task(&measuring_shaft);
-  dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
-  kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
-  //send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
-
+  touch_task(&zoe_test_bench);
   screen_task(&motor_control_dmc_zoe,&motor_control_kelly_pmac,&power_supply,&measuring_shaft,&zoe_test_bench);
   
+  // tasks that are executed each loop
   measurement_task(&measuring_shaft);
   dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
-  
+  vehicle_task(&power_supply);
   send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
-
-  measurement_task(&measuring_shaft);
-  dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
-  kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
+  
 }
   
