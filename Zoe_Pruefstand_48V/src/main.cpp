@@ -136,6 +136,7 @@ void dmc_zoe_control_task(motor_control_def* motor_control_dmc_zoe, vehicle_def*
     }  
     // set foot switch
     digitalWrite(FOOT_SWITCH_DMC_PIN,motor_control_dmc_zoe->state_foot_switch);
+    digitalWrite(BRAKE_SWITCH_DMC_PIN,motor_control_dmc_zoe->state_brake_switch);
 }
 
 void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, vehicle_def* vehicle, measurement_def* measurement) {
@@ -308,13 +309,13 @@ void touch_task(test_bench_def* test_bench){
   }
 }
 
-void send_data_task(test_bench_def* test_bench, vehicle_def* vehicle, motor_control_def* motor_control_dmc_zoe, motor_control_def* motor_control_kelly_pmac, measurement_def* measurement){
-  //send_data_task
-  Serial.print(data_string_test_bench(test_bench) + data_string_vehicle(vehicle) + data_string_motor_control_dmc_zoe(motor_control_dmc_zoe) + data_string_motor_control_kelly_pmac(motor_control_kelly_pmac) + data_string_measurement(measurement));
-  Serial.write(13); // send terminator 1
-  Serial.write(10); // send terminator 2
+void send_data_task_tp(test_bench_def* test_bench, vehicle_def* vehicle, motor_control_def* motor_control_dmc, motor_control_def* motor_control_kelly, measurement_def* measurement){
+  send_test_bench_data_tp(test_bench);
+  send_vehicle_data_tp(vehicle);
+  send_motor_control_data_dmc_tp(motor_control_dmc);
+  send_motor_control_data_kelly_tp(motor_control_kelly);
+  send_measurement_data_tp(measurement);
 }
-
 // setup function
 void setup() {
   
@@ -490,21 +491,21 @@ void loop() {
   measurement_task(&measuring_shaft);
   dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
-  //send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
+  //send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
   
   vehicle_task(&power_supply);
 
   measurement_task(&measuring_shaft);
   dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
-  //send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
+  //send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
   
   //touch_task(&zoe_test_bench);
 
   measurement_task(&measuring_shaft);
   dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
-  //send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
+  //send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
 
   screen_task(&motor_control_dmc_zoe,&motor_control_kelly_pmac,&power_supply,&measuring_shaft,&zoe_test_bench);
   
@@ -512,7 +513,7 @@ void loop() {
   dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
   
-  send_data_task(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
+  send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
 
   measurement_task(&measuring_shaft);
   dmc_zoe_control_task(&motor_control_dmc_zoe,&power_supply,&measuring_shaft);
