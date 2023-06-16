@@ -224,30 +224,23 @@ void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* mot
       // Mechanical Power DMC_ZOE = W
       // Motor Efficiency DMC_ZOE = %
       // Generator Efficiency DMC_ZOE = %
-    tft.setCursor(2, 2);
-    tft.setTextSize(3);
-    tft.setTextColor(ILI9341_WHITE,ILI9341_BLACK);
-    tft.println(F("AG48V Test Bench"));
+
     tft.setTextSize(1);
-    tft.print(F("Mode                    : ")); tft.print(test_bench->mode); tft.println(F(" (0 = manual, 1 = auto)"));
-    tft.print(F("Start Measuring Cycle   : ")); tft.print(test_bench->start); tft.println(F(" (0 = no, 1 = yes)"));
-    tft.print(F("Stop Measuring Cycle    : ")); tft.print(test_bench->stop); tft.println(F(" (0 = no, 1 = yes)"));
-    tft.print(F("Measuring Cycle         : ")); tft.print(test_bench->measuring_cycle); tft.println(F(" (0 = inactive, 1 = active)"));
-    tft.print(F("Controll Mode DMC_ZOE   : ")); tft.print(motor_control_dmc_zoe->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
-    tft.print(F("Controll Mode KELLY_PMAC: ")); tft.print(motor_control_kelly_pmac->control_mode); tft.println(F(" (0 = speed, 1 = torque)"));
-    tft.println();
-    tft.print(F("Excitation Current     : ")); tft.print(motor_control_dmc_zoe->excitation_current_sensor); tft.println(F(" A  "));
-    tft.println();
-    tft.print(F("Battery(DMC) Current   : ")); tft.print(vehicle->battery_current); tft.println(F(" A   "));
-    tft.print(F("Battery(DMC) Voltage   : ")); tft.print(vehicle->battery_voltage); tft.println(F(" V   "));
-    tft.println();
-    tft.print(F("Speed : ")); tft.print(measurement->speed_measuring_shaft_sensor); tft.println(F(" rpm   "));
-    tft.print(F("Torque: ")); tft.print(measurement->torque_measuring_shaft_sensor); tft.println(F(" Nm   "));
-    tft.println();
+    tft.setCursor(302,26);   tft.print(test_bench->mode); 
+    tft.setCursor(302,34);   tft.print(test_bench->start);
+    tft.setCursor(302,42);   tft.print(test_bench->stop);
+    tft.setCursor(302,50);   tft.print(test_bench->measuring_cycle);
+    tft.setCursor(302,58);   tft.print(motor_control_dmc_zoe->control_mode);
+    tft.setCursor(302,66);   tft.print(motor_control_kelly_pmac->control_mode);
+    tft.setCursor(158,82);   tft.print(motor_control_dmc_zoe->excitation_current_sensor);
+    tft.setCursor(158,98);   tft.print(vehicle->battery_current);
+    tft.setCursor(158,106);   tft.print(vehicle->battery_voltage);
+    tft.setCursor(86,122);   tft.print(measurement->speed_measuring_shaft_sensor);
+    tft.setCursor(86,130);   tft.print(measurement->torque_measuring_shaft_sensor);
     double electrical_power_dmc_zoe = vehicle->battery_voltage*vehicle->battery_current;
     double mechanical_power_dmc_zoe = measurement->speed_measuring_shaft_sensor*measurement->torque_measuring_shaft_sensor*2*PI/60;
-    tft.print(F("Electrical Power DMC_ZOE    : ")); tft.print(electrical_power_dmc_zoe); tft.println(F(" W   "));
-    tft.print(F("Mechanical Power DMC_ZOE    : ")); tft.print(mechanical_power_dmc_zoe); tft.println(F(" W   "));
+    tft.setCursor(206,146);   tft.print(electrical_power_dmc_zoe);
+    tft.setCursor(206,154);   tft.print(mechanical_power_dmc_zoe);
     double motor_efficiency_dmc_zoe;
     double generator_efficiency_dmc_zoe;
     if(mechanical_power_dmc_zoe<electrical_power_dmc_zoe){
@@ -258,8 +251,8 @@ void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* mot
       motor_efficiency_dmc_zoe = 0;
       generator_efficiency_dmc_zoe = electrical_power_dmc_zoe/mechanical_power_dmc_zoe;  
     }
-    tft.print(F("Motor Efficiency DMC_ZOE    : ")); tft.print(motor_efficiency_dmc_zoe); tft.println(F(" %   "));
-    tft.print(F("Generator Efficiency DMC_ZOE: ")); tft.print(generator_efficiency_dmc_zoe); tft.println(F(" %   "));
+    tft.setCursor(206,162);   tft.print(motor_efficiency_dmc_zoe);
+    tft.setCursor(206,170);   tft.print(generator_efficiency_dmc_zoe);
   last_time_screen_task = millis();
   }  
 }
@@ -494,6 +487,33 @@ void setup() {
   tft.print("Stop");
   tft.setCursor(BUTTON3_TOP_LEFT_X+2, BUTTON3_TOP_LEFT_Y+10);
   tft.print("Cycle");
+
+  // init static text for screen
+  tft.setCursor(2, 2);
+  tft.setTextSize(3);
+  tft.setTextColor(ILI9341_WHITE,ILI9341_BLACK);
+  tft.println(F("AG48V Test Bench"));
+  tft.setTextSize(1);
+  tft.println(F("Mode (0 = manual, 1 = auto)                      : ")); 
+  tft.println(F("Start Measuring Cycle (0 = no, 1 = yes)          : ")); 
+  tft.println(F("Stop Measuring Cycle (0 = no, 1 = yes)           : "));
+  tft.println(F("Measuring Cycle (0 = inactive, 1 = active)       : "));
+  tft.println(F("Controll Mode DMC_ZOE (0 = speed, 1 = torque)    : ")); 
+  tft.println(F("Controll Mode KELLY_PMAC (0 = speed, 1 = torque) : "));
+  tft.println();
+  tft.println(F("Excitation Current (A)   : "));
+  tft.println();
+  tft.println(F("Battery(DMC) Current (A) : "));
+  tft.println(F("Battery(DMC) Voltage (V) : ")); 
+  tft.println();
+  tft.println(F("Speed (rpm)  : "));
+  tft.println(F("Torque (Nm)  : "));
+  tft.println();
+  tft.println(F("Electrical Power DMC_ZOE (W)     : "));
+  tft.println(F("Mechanical Power DMC_ZOE (W)     : "));
+  tft.println(F("Motor Efficiency DMC_ZOE (%)     : ")); 
+  tft.println(F("Generator Efficiency DMC_ZOE (%) : ")); 
+
 }
 
 // loop function
