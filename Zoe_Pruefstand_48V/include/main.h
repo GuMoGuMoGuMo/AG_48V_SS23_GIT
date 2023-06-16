@@ -13,6 +13,32 @@
 #define SPEED_MAX 5000 // 8000 rpm @48V PMAC
 #define EXCITATION_CURRENT_MAX 5
 
+//define Controller settings
+#define CONTROL_MODE_DMC_ZOE 0 // 0 = speed controlled , 1 = torque controlled
+#define CONTROL_MODE_KELLY_PMAC 1 // 0 = speed controlled , 1 = torque controlled
+
+#define MIN_RPM_FOR_TORQUE 50 //rpm
+
+#define DMC_ZOE_KP_SPEED 2
+#define DMC_ZOE_KI_SPEED 5
+#define DMC_ZOE_KD_SPEED 0
+
+#define DMC_ZOE_KP_TORQUE 2 
+#define DMC_ZOE_KI_TORQUE 5
+#define DMC_ZOE_KD_TORQUE 0
+
+#define DMC_ZOE_KP_EXCITATION_CURRENT 2
+#define DMC_ZOE_KI_EXCITATION_CURRENT 5 
+#define DMC_ZOE_KD_EXCITATION_CURRENT 0
+
+#define KELLY_PMAC_KP_SPEED 2
+#define KELLY_PMAC_KI_SPEED 11
+#define KELLY_PMAC_KD_SPEED 0
+
+#define KELLY_PMAC_KP_TORQUE 2
+#define KELLY_PMAC_KI_TORQUE 5
+#define KELLY_PMAC_KD_TORQUE 0
+
  // define constants
 #define R_EXCITATION_COIL 8.5
 #define L_EXCITATION_COIL 1
