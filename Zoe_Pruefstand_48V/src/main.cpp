@@ -498,7 +498,7 @@ void setup() {
 
 // loop function
 void loop() {
-
+  unsigned long loop_time = millis();
   //tasks that have a max frequqncy 
   test_bench_task(&zoe_test_bench,&motor_control_dmc_zoe,&motor_control_kelly_pmac, measuring_cycle_table, MEASURING_CYCLE_TABLE_SIZE);
   touch_task(&zoe_test_bench);
@@ -510,6 +510,6 @@ void loop() {
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
   vehicle_task(&power_supply);
   send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
-  
+  Serial.print(">loop_time_ms:");Serial.println(millis()-loop_time);
 }
   
