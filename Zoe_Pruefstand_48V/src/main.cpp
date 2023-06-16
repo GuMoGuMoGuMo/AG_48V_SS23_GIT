@@ -106,16 +106,18 @@ void dmc_zoe_control_task(motor_control_def* motor_control_dmc_zoe, vehicle_def*
 
       // set dac gas/brake
       uint16_t output = round(percentage/100.0*4096.0); // calc output of dac, percentage 0..100
-      if (motor_control_dmc_zoe->torque_output>=0) {
-        dac_gas_dmc.setVoltage(abs(output),false);
-        dac_bremse_dmc.setVoltage(0,false);
-        motor_control_dmc_zoe->state_foot_switch = 1; 
-      }
-      else { // if torque_output <0
-        dac_gas_dmc.setVoltage(0,false);
-        dac_bremse_dmc.setVoltage(abs(output),false);
-        motor_control_dmc_zoe->state_foot_switch = 0;
-      }
+      if (motor_control_dmc_zoe->speed_sensor>MIN_RPM_FOR_TORQUE){
+        if (motor_control_dmc_zoe->torque_output>=0) {
+          dac_gas_dmc.setVoltage(abs(output),false);
+          dac_bremse_dmc.setVoltage(0,false);
+          motor_control_dmc_zoe->state_foot_switch = 1; 
+        }
+        else { // if torque_output <0
+          dac_gas_dmc.setVoltage(0,false);
+          dac_bremse_dmc.setVoltage(abs(output),false);
+          motor_control_dmc_zoe->state_foot_switch = 0;
+        }
+      }  
     } 
     else {
       // pid motor speed
@@ -156,15 +158,17 @@ void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, vehicl
 
       // set dac gas/brake
       uint16_t output = round(percentage/100.0*4096.0); //calc output of dac, percentage 0..100
-      if (motor_control_kelly_pmac->torque_output>=0) {
-        dac_gas_kelly.setVoltage(abs(output),false);
-        dac_bremse_kelly.setVoltage(0,false);
-        motor_control_kelly_pmac->state_foot_switch = 1;
-      }
-      else { // if torque_output <0
-        dac_gas_kelly.setVoltage(0,false);
-        dac_bremse_kelly.setVoltage(abs(output),false);
-        motor_control_kelly_pmac->state_foot_switch = 0;
+      if (motor_control_kelly_pmac->speed_sensor>MIN_RPM_FOR_TORQUE){
+        if (motor_control_kelly_pmac->torque_output>=0) {
+          dac_gas_kelly.setVoltage(abs(output),false);
+          dac_bremse_kelly.setVoltage(0,false);
+          motor_control_kelly_pmac->state_foot_switch = 1;
+        }
+        else { // if torque_output <0
+          dac_gas_kelly.setVoltage(0,false);
+          dac_bremse_kelly.setVoltage(abs(output),false);
+          motor_control_kelly_pmac->state_foot_switch = 0;
+        }
       }
     } 
     else {
@@ -416,8 +420,8 @@ void setup() {
   excitation_current_sensor.autoMidPoint();   
 
   //set motor control mode
-  motor_control_dmc_zoe.control_mode = 0; // 0 = speed controlled , 1 = torque controlled
-  motor_control_kelly_pmac.control_mode = 0; // 0 = speed controlled , 1 = torque controlled
+  motor_control_dmc_zoe.control_mode = CONTROL_MODE_DMC_ZOE; // 0 = speed controlled , 1 = torque controlled
+  motor_control_kelly_pmac.control_mode = CONTROL_MODE_KELLY_PMAC; // 0 = speed controlled , 1 = torque controlled
 
   //set max torque, speed, excitation current DMC_ZOE
   motor_control_dmc_zoe.excitation_current_max = EXCITATION_CURRENT_MAX;
@@ -429,26 +433,26 @@ void setup() {
   motor_control_kelly_pmac.speed_max = SPEED_MAX;
 
   // set PID Parameter DMC_ZOE
-  motor_control_dmc_zoe.kp_speed=2;
-  motor_control_dmc_zoe.ki_speed=5;
-  motor_control_dmc_zoe.kd_speed=0;
+  motor_control_dmc_zoe.kp_speed = DMC_ZOE_KP_SPEED;
+  motor_control_dmc_zoe.ki_speed = DMC_ZOE_KI_SPEED;
+  motor_control_dmc_zoe.kd_speed = DMC_ZOE_KD_SPEED;
 
-  motor_control_dmc_zoe.kp_torque=2;
-  motor_control_dmc_zoe.ki_torque=1;
-  motor_control_dmc_zoe.kd_torque=0;
+  motor_control_dmc_zoe.kp_torque = DMC_ZOE_KP_TORQUE;
+  motor_control_dmc_zoe.ki_torque = DMC_ZOE_KI_TORQUE;
+  motor_control_dmc_zoe.kd_torque = DMC_ZOE_KD_TORQUE;
 
-  motor_control_dmc_zoe.kp_excitation_current=2;
-  motor_control_dmc_zoe.ki_excitation_current=1;
-  motor_control_dmc_zoe.kd_excitation_current=0;
+  motor_control_dmc_zoe.kp_excitation_current = DMC_ZOE_KP_EXCITATION_CURRENT;
+  motor_control_dmc_zoe.ki_excitation_current = DMC_ZOE_KI_EXCITATION_CURRENT;
+  motor_control_dmc_zoe.kd_excitation_current = DMC_ZOE_KD_EXCITATION_CURRENT;
 
   // set PID Parameter Kelly_PMAC
-  motor_control_kelly_pmac.kp_speed=2;
-  motor_control_kelly_pmac.ki_speed=11;
-  motor_control_kelly_pmac.kd_speed=0;
+  motor_control_kelly_pmac.kp_speed = KELLY_PMAC_KP_SPEED;
+  motor_control_kelly_pmac.ki_speed = KELLY_PMAC_KI_SPEED;
+  motor_control_kelly_pmac.kd_speed = KELLY_PMAC_KD_SPEED;
 
-  motor_control_kelly_pmac.kp_torque=1;
-  motor_control_kelly_pmac.ki_torque=0;
-  motor_control_kelly_pmac.kd_torque=0;
+  motor_control_kelly_pmac.kp_torque = KELLY_PMAC_KP_TORQUE;
+  motor_control_kelly_pmac.ki_torque = KELLY_PMAC_KI_TORQUE;
+  motor_control_kelly_pmac.kd_torque = KELLY_PMAC_KD_TORQUE;
 
   // initialize pid controllers
   dmc_zoe_speed_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.speed_max));
