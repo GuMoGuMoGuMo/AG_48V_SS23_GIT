@@ -18,7 +18,7 @@
 
 //define Controller settings
 #define CONTROL_MODE_DMC_ZOE 0 // 0 = speed controlled , 1 = torque controlled
-#define CONTROL_MODE_KELLY_PMAC 1 // 0 = speed controlled , 1 = torque controlled
+#define CONTROL_MODE_KELLY_PMAC 0 // 0 = speed controlled , 1 = torque controlled
 
 #define MIN_RPM_FOR_TORQUE 50 //rpm
 

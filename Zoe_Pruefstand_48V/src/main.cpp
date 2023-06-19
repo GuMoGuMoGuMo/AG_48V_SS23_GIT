@@ -328,6 +328,7 @@ void setup() {
   Serial.begin(SERIAL_BAUD_RATE,SERIAL_8N1);
   
   // initialize screen
+  delay(1000); // delay need for display controller to power up before beiing initialized
   tft.begin();
   tft.setRotation(3);
   tft.fillScreen(ILI9341_BLACK);
