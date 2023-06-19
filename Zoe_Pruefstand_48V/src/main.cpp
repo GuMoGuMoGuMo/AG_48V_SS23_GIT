@@ -325,7 +325,7 @@ void send_data_task_tp(test_bench_def* test_bench, vehicle_def* vehicle, motor_c
 void setup() {
   
   // initialize serial communication
-  Serial.begin(115200,SERIAL_8N1);
+  Serial.begin(SERIAL_BAUD_RATE,SERIAL_8N1);
   
   // initialize screen
   tft.begin();

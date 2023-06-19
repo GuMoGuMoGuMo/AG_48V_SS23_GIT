@@ -8,6 +8,9 @@
 //#include measuring cycles
 #include "measuring_cycle.h"
 
+//define Arduino DUE Settings
+#define SERIAL_BAUD_RATE 115200
+
 // define bench limits
 #define TORQUE_MAX 40
 #define SPEED_MAX 5000 // 8000 rpm @48V PMAC
@@ -83,7 +86,7 @@ unsigned long last_time_screen_task = 0;
 #define FOOT_SWITCH_DMC_PIN 26
 #define BRAKE_SWITCH_DMC_PIN 40
 
-#define PWM_EXCITATION_CURRENT_ZOE_PIN A13
+#define PWM_EXCITATION_CURRENT_ZOE_PIN A11
 
 #define FOOT_SWITCH_KELLY_PIN 22
 #define BRAKE_SWITCH_KELLY_PIN 24
@@ -100,6 +103,8 @@ unsigned long last_time_screen_task = 0;
 #include <stdint.h>
 #include <TouchScreen.h>
 #include <Adafruit_ILI9341.h>
+//#include <ILI9341_due_config.h>
+//#include <ILI9341_due.h>
 #include "hs_esslingen_logo_bitmap.h"
 
 
@@ -108,6 +113,7 @@ unsigned long last_time_screen_task = 0;
 
 #define TFT_DC 32
 #define TFT_CS 30
+#define TFT_RST 29
 #define YP A6  // must be an analog pin, use "An" notation!
 #define XM A7  // must be an analog pin, use "An" notation!
 #define YM 34   // can be a digital pin
@@ -133,6 +139,7 @@ unsigned long last_time_screen_task = 0;
 #define BUTTON3_WIDTH 100
 #define BUTTON3_HEIGHT 40
 
+//ILI9341_due tft = ILI9341_due(TFT_CS, TFT_DC, TFT_RST);
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 TSPoint touchPoint;
