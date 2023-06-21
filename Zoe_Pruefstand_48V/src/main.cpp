@@ -3,6 +3,7 @@
 // define tasks
 
 void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_control_dmc_zoe,motor_control_def* motor_control_kelly_pmac,const struct measuring_cycle_def* table_ptr, size_t table_size) {
+  DEBUG_PRINTLN("<fcn_test_bench_task:"); DEBUG_PRINTLN("start"); //debug print
   if (millis()-last_time_test_bench_task>MIN_TIME_BETWEEN_TEST_BENCH_TASK_EXEC){ //minimum time  between exec is set to save cpu capacity for the control tasks
     // test_bench_task
     test_bench->time = millis()/1000; // set current time
@@ -33,7 +34,7 @@ void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_contro
             // write the values of the closest entry to the current time
             motor_control_dmc_zoe->speed_setpoint = closest_entry->rpm;
             motor_control_kelly_pmac->speed_setpoint = closest_entry->rpm;
-            motor_control_dmc_zoe->torque_setpoint = closest_entry->torque;
+            motor_control_dmc_zoe->torque_setpoint = -(closest_entry->torque);
             motor_control_kelly_pmac->torque_setpoint = closest_entry->torque;
             motor_control_dmc_zoe->exication_current_setpoint = closest_entry->exitacion_current;
         } else {
@@ -73,25 +74,31 @@ void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_contro
     }
     last_time_test_bench_task = millis();  
   }  
+  DEBUG_PRINT(">fcn_test_bench_task:"); DEBUG_PRINTLN("stop"); //debug print
 }
 
 void vehicle_task(vehicle_def* vehicle) {
   // vehicle_task
+  DEBUG_PRINT("<fcn_vehicle_task:"); DEBUG_PRINTLN("start"); //debug print
   //read battery_voltage_pin
   vehicle->battery_voltage = adc_vehicle_dmc_zoe.readADC(BATTERY_VOLTAGE_SENSOR_PIN)*adc_vehicle_dmc_zoe.toVoltage(1)*(R2_VOLTAGE_DIVIDER_U_BATT+R1_VOLTAGE_DIVIDER_U_BATT)/R2_VOLTAGE_DIVIDER_U_BATT;
   // read battery_current_pin
-  vehicle->battery_current = (battery_current_sensor_1.mA_DC()+battery_current_sensor_2.mA_DC()+battery_current_sensor_3.mA_DC())/1000.0;
+  vehicle->battery_current = CURRENT_DMC_ON +(battery_current_sensor_1.mA_DC(CURRENT_SENSOR_SAMPLES)+battery_current_sensor_2.mA_DC(CURRENT_SENSOR_SAMPLES)+battery_current_sensor_3.mA_DC(CURRENT_SENSOR_SAMPLES))/1000.0; // adjust with *-1 reverse direction wiring of current sensors
+  //Serial.print(">bc1:"),Serial.println(battery_current_sensor_1.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0);
+  //Serial.print(">bc2:"),Serial.println(battery_current_sensor_2.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0);
+  //Serial.print(">bc3:"),Serial.println(battery_current_sensor_3.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0);
+  DEBUG_PRINT(">fcn_vehicle_task:"); DEBUG_PRINTLN("stop"); //debug print
 }
 
 void dmc_zoe_control_task(motor_control_def* motor_control_dmc_zoe, vehicle_def* vehicle, measurement_def* measurement) {
     // dmc_zoe_control_task
-
+    DEBUG_PRINT(">fcn_dmc_zoe_control_task:"); DEBUG_PRINTLN("start"); //debug print
     // set speed & torque values using last value from measuring shaft 
     motor_control_dmc_zoe->speed_sensor = measurement->speed_measuring_shaft_sensor;
     motor_control_dmc_zoe->torque_sensor = measurement->torque_measuring_shaft_sensor;
     
     //read excitation_current
-    motor_control_dmc_zoe->excitation_current_sensor = excitation_current_sensor.mA_DC()/1000.0;
+    motor_control_dmc_zoe->excitation_current_sensor = excitation_current_sensor.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0;
     
     // pid excitation_current
     excitation_current_pid.Compute();
@@ -105,17 +112,19 @@ void dmc_zoe_control_task(motor_control_def* motor_control_dmc_zoe, vehicle_def*
       percentage = round(abs(motor_control_dmc_zoe->torque_output)/motor_control_dmc_zoe->torque_max*100.0); //calculate percentage of gas/brake applied here;
 
       // set dac gas/brake
-      uint16_t output = round(percentage/100.0*4096.0); // calc output of dac, percentage 0..100
+      uint16_t output = round(percentage/100.0*4095.0); // calc output of dac, percentage 0..100
       if (motor_control_dmc_zoe->speed_sensor>MIN_RPM_FOR_TORQUE){
         if (motor_control_dmc_zoe->torque_output>=0) {
           dac_gas_dmc.setVoltage(abs(output),false);
           dac_bremse_dmc.setVoltage(0,false);
           motor_control_dmc_zoe->state_foot_switch = 1; 
+          motor_control_dmc_zoe->state_brake_switch = 0;
         }
         else { // if torque_output <0
           dac_gas_dmc.setVoltage(0,false);
           dac_bremse_dmc.setVoltage(abs(output),false);
           motor_control_dmc_zoe->state_foot_switch = 0;
+          motor_control_dmc_zoe->state_brake_switch = 1;
         }
       }  
     } 
@@ -125,7 +134,7 @@ void dmc_zoe_control_task(motor_control_def* motor_control_dmc_zoe, vehicle_def*
       percentage = round(abs(motor_control_dmc_zoe->speed_output)/motor_control_dmc_zoe->speed_max*100.0); //calculate percentage of gas/brake applied here;
 
       // set dac gas/brake
-      uint16_t output = round(percentage/100.0*4096.0); // calc output of dac, percentage 0..100
+      uint16_t output = round(percentage/100.0*4095.0); // calc output of dac, percentage 0..100
       if (motor_control_dmc_zoe->speed_output>=0) {
         dac_gas_dmc.setVoltage(abs(output),false);
         dac_bremse_dmc.setVoltage(0,false);
@@ -142,11 +151,12 @@ void dmc_zoe_control_task(motor_control_def* motor_control_dmc_zoe, vehicle_def*
     // set foot switch
     digitalWrite(FOOT_SWITCH_DMC_PIN,motor_control_dmc_zoe->state_foot_switch);
     digitalWrite(BRAKE_SWITCH_DMC_PIN,motor_control_dmc_zoe->state_brake_switch);
+    DEBUG_PRINT(">fcn_dmc_zoe_control_task:"); DEBUG_PRINTLN("stop"); //debug print
 }
 
 void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, vehicle_def* vehicle, measurement_def* measurement) {
   // kelly_pmac_control_task
-  
+    DEBUG_PRINT(">fcn_kelly_pmac_control_task:"); DEBUG_PRINTLN("start"); //debug print
     // set speed & torque values using last value from measuring shaft
     motor_control_kelly_pmac->speed_sensor = measurement->speed_measuring_shaft_sensor;
     motor_control_kelly_pmac->torque_sensor = measurement->torque_measuring_shaft_sensor;
@@ -157,28 +167,29 @@ void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, vehicl
       percentage = round(abs(motor_control_kelly_pmac->torque_output)/motor_control_kelly_pmac->torque_max*100.0); //calculate percentage of gas/brake applied here;
 
       // set dac gas/brake
-      uint16_t output = round(percentage/100.0*4096.0); //calc output of dac, percentage 0..100
+      uint16_t output = round(percentage/100.0*4095.0); //calc output of dac, percentage 0..100
       if (motor_control_kelly_pmac->speed_sensor>MIN_RPM_FOR_TORQUE){
         if (motor_control_kelly_pmac->torque_output>=0) {
-          dac_gas_kelly.setVoltage(abs(output),false);
-          dac_bremse_kelly.setVoltage(0,false);
-          motor_control_kelly_pmac->state_foot_switch = 1;
-        }
-        else { // if torque_output <0
           dac_gas_kelly.setVoltage(0,false);
           dac_bremse_kelly.setVoltage(abs(output),false);
+          motor_control_kelly_pmac->state_foot_switch = 1;
+          motor_control_kelly_pmac->state_brake_switch = 0;
+        }
+        else { // if torque_output <0
+          dac_gas_kelly.setVoltage(abs(output),false);
+          dac_bremse_kelly.setVoltage(0,false);
           motor_control_kelly_pmac->state_foot_switch = 0;
+          motor_control_kelly_pmac->state_brake_switch = 1;
         }
       }
     } 
     else {
       // pid motor speed
       kelly_pmac_speed_pid.Compute(); // compute PID Output
-      
       percentage = round(abs(motor_control_kelly_pmac->speed_output)/motor_control_kelly_pmac->speed_max*100.0); //calculate percentage of gas/brake applied here;
 
       // set dac gas/brake
-      uint16_t output = round(percentage/100.0*4096.0); // calc output of dac, percentage 0..100
+      uint16_t output = round(percentage/100.0*4095.0); // calc output of dac, percentage 0..100
       if (motor_control_kelly_pmac->speed_output>=0) {
         dac_gas_kelly.setVoltage(abs(output),false);
         dac_bremse_kelly.setVoltage(0,false);
@@ -196,17 +207,21 @@ void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, vehicl
     digitalWrite(FOOT_SWITCH_KELLY_PIN,motor_control_kelly_pmac->state_foot_switch);
     // set brake switch
     digitalWrite(BRAKE_SWITCH_KELLY_PIN,motor_control_kelly_pmac->state_brake_switch);
+    DEBUG_PRINT(">fcn_kelly_pmac_control_task:"); DEBUG_PRINTLN("stop"); //debug print
 }
 
 void measurement_task(measurement_def* measurement) {
-    // measurement_task
-    // read torque
+  // measurement_task
+  DEBUG_PRINT(">fcn_measurement_task:"); DEBUG_PRINTLN("start"); //debug print
+  // read torque
   measurement->torque_measuring_shaft_sensor = ((adc_measuring_shaft.readADC(TORQUE_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1) - U_SUPPLY_MEASURING_CIRCUIT * (1+R3_LM358_OP_AMP/R1_LM358_OP_AMP) * R4_LM358_OP_AMP/(R4_LM358_OP_AMP+R2_LM358_OP_AMP))* (-R1_LM358_OP_AMP/R3_LM358_OP_AMP)) * deltaM - torque_offset; // in Nm
     // read speed
   measurement->speed_measuring_shaft_sensor = (adc_measuring_shaft.readADC(SPEED_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1)*((R1_VOLTAGE_DIVIDER_MEASURING_SHAFT+R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)/R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)) * SPEED_MODE_MEASURING_SHAFT - speed_offset; //in rpm 
+  DEBUG_PRINT(">fcn_measurement_task:"); DEBUG_PRINTLN("stop"); //debug print
 }
 
 void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* motor_control_kelly_pmac ,vehicle_def* vehicle,measurement_def* measurement,test_bench_def* test_bench) {
+  DEBUG_PRINT(">fcn_screen_task:"); DEBUG_PRINTLN("start"); //debug print
   if (millis()-last_time_screen_task>MIN_TIME_BETWEEN_SCREEN_TASK_EXEC){ //minimum time  between exec is set to save cpu capacity for the control tasks
       // screen_task
       // Display:
@@ -255,9 +270,11 @@ void screen_task(motor_control_def* motor_control_dmc_zoe,motor_control_def* mot
     tft.setCursor(206,170);   tft.print(generator_efficiency_dmc_zoe);
   last_time_screen_task = millis();
   }  
+  DEBUG_PRINT(">fcn_screen_task:"); DEBUG_PRINTLN("stop"); //debug print
 }
 
 void touch_task(test_bench_def* test_bench){
+  DEBUG_PRINT(">fcn_touch_task:"); DEBUG_PRINTLN("start"); //debug print
   if (millis()-last_time_touch_task>MIN_TIME_BETWEEN_TOUCH_TASK_EXEC){ //minimum time  between exec is set to save cpu capacity for the control tasks
     //touch task
     TSPoint t;    // create touch variable to save not calibrated touch points
@@ -312,21 +329,21 @@ void touch_task(test_bench_def* test_bench){
     }
     last_time_touch_task = millis();
   }
+  DEBUG_PRINT(">fcn_touch_task:"); DEBUG_PRINTLN("stop"); //debug print
 }
 
 void send_data_task_tp(test_bench_def* test_bench, vehicle_def* vehicle, motor_control_def* motor_control_dmc, motor_control_def* motor_control_kelly, measurement_def* measurement){
+  DEBUG_PRINT(">fcn_send_data_task_tp:"); DEBUG_PRINTLN("start"); //debug print
   send_test_bench_data_tp(test_bench);
   send_vehicle_data_tp(vehicle);
   send_motor_control_data_dmc_tp(motor_control_dmc);
   send_motor_control_data_kelly_tp(motor_control_kelly);
   send_measurement_data_tp(measurement);
+  DEBUG_PRINT(">fcn_send_data_task_tp:"); DEBUG_PRINTLN("stop"); //debug print
 }
-// setup function
-void setup() {
-  
-  // initialize serial communication
-  Serial.begin(SERIAL_BAUD_RATE,SERIAL_8N1);
-  
+
+void init_screen_touchscreen(){
+  DEBUG_PRINT(">fcn_init_screen_touchscreen:"); DEBUG_PRINTLN("start"); //debug print
   // initialize screen
   delay(1000); // delay need for display controller to power up before beiing initialized
   tft.begin();
@@ -339,136 +356,7 @@ void setup() {
   // show logo
   tft.drawRGBBitmap(100,100,hs_esslingen_logo_bitmap,HS_ESSLINGEN_LOGO_WIDTH,HS_ESSLINGEN_LOGO_HEIGHT);
   delay(1000);
-  
-  // initialze analog input pins
-  pinMode(EXCITATION_CURRENT_POTI_ZOE_PIN,INPUT);
-  pinMode(POTI_THROTTLE_DMC_PIN,INPUT);
-  pinMode(POTI_BRAKE_DMC_PIN,INPUT);
 
-  // initialize digital output pins
-  pinMode(PWM_EXCITATION_CURRENT_ZOE_PIN,OUTPUT);
-  digitalWrite(PWM_EXCITATION_CURRENT_ZOE_PIN, LOW); 
-  
-  pinMode(FOOT_SWITCH_DMC_PIN,OUTPUT);
-  digitalWrite(FOOT_SWITCH_DMC_PIN, LOW);  
-
-  pinMode(BRAKE_SWITCH_DMC_PIN,OUTPUT);
-  digitalWrite(BRAKE_SWITCH_DMC_PIN, LOW);  
-
-  pinMode(FOOT_SWITCH_KELLY_PIN,OUTPUT);
-  digitalWrite(FOOT_SWITCH_KELLY_PIN, LOW); 
-   
-  pinMode(BRAKE_SWITCH_KELLY_PIN,OUTPUT);
-  digitalWrite(BRAKE_SWITCH_KELLY_PIN, LOW); 
-
-  pinMode(SWITCH_D_N_DMC_PIN,OUTPUT);   // set motors from Neutral to drive
-  pinMode(SWITCH_D_N_KELLY_PIN,OUTPUT);
-  digitalWrite(SWITCH_D_N_DMC_PIN,HIGH);
-  digitalWrite(SWITCH_D_N_KELLY_PIN,HIGH);
-  
-  
-  // initialize digital analog converters
-  dac_gas_dmc.begin(ADRESS_DAC_gas_dmc);
-  dac_bremse_dmc.begin(ADRESS_DAC_bremse_dmc);
-  dac_gas_kelly.begin(ADRESS_DAC_gas_kelly);
-  dac_bremse_kelly.begin(ADRESS_DAC_bremse_kelly);
-
-  dac_gas_dmc.setVoltage(0,true);
-  dac_bremse_dmc.setVoltage(0,true);
-  dac_gas_kelly.setVoltage(0,true);
-  dac_bremse_kelly.setVoltage(0,true);
-  
-
-  // initialize analog digital converters
-  if (!adc_vehicle_dmc_zoe.begin()) {
-    Serial.println("Failed to initialize adc_vehicle_dmc_zoe.");
-    while (1);
-  }
-  adc_vehicle_dmc_zoe.setGain(0);
- 
-  if (!adc_measuring_shaft.begin()) {
-    Serial.println("Failed to initialize adc_measuring_shaft.");
-    while (1);
-  }
-  adc_measuring_shaft.setGain(0);
-  
-   if (!adc_measuring_dmc_current.begin()) {
-    Serial.println("Failed to initialize adc_measuring_dmc_current.");
-    while (1);
-  }
-  adc_measuring_dmc_current.setGain(0);
-
-  //set torque and speed offset, test bench must be standing still with no torque applied
-  torque_offset = ((adc_measuring_shaft.readADC(TORQUE_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1) - U_SUPPLY_MEASURING_CIRCUIT * (1+R3_LM358_OP_AMP/R1_LM358_OP_AMP) * R4_LM358_OP_AMP/(R4_LM358_OP_AMP+R2_LM358_OP_AMP))* (-R1_LM358_OP_AMP/R3_LM358_OP_AMP)) * deltaM;
-  speed_offset = (adc_measuring_shaft.readADC(SPEED_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1)*((R1_VOLTAGE_DIVIDER_MEASURING_SHAFT+R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)/R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)) * SPEED_MODE_MEASURING_SHAFT;
-  
-  
-  // initialize current sensors
-  battery_current_sensor_1.setADC(read_adc_battery_current_sensor_1, 10, 1023);
-  battery_current_sensor_1.autoMidPoint(); 
-  battery_current_sensor_2.setADC(read_adc_battery_current_sensor_2, 10, 1023);
-  battery_current_sensor_2.autoMidPoint(); 
-  battery_current_sensor_3.setADC(read_adc_battery_current_sensor_3, 10, 1023);
-  battery_current_sensor_3.autoMidPoint(); 
-  excitation_current_sensor.setADC(read_adc_excitation_current_sensor, 10, 1023);
-  excitation_current_sensor.autoMidPoint();   
-
-  //set motor control mode
-  motor_control_dmc_zoe.control_mode = CONTROL_MODE_DMC_ZOE; // 0 = speed controlled , 1 = torque controlled
-  motor_control_kelly_pmac.control_mode = CONTROL_MODE_KELLY_PMAC; // 0 = speed controlled , 1 = torque controlled
-
-  //set max torque, speed, excitation current DMC_ZOE
-  motor_control_dmc_zoe.excitation_current_max = EXCITATION_CURRENT_MAX;
-  motor_control_dmc_zoe.torque_max = TORQUE_MAX; 
-  motor_control_dmc_zoe.speed_max = SPEED_MAX;
-
-  // set max torque, speed kelly_pmac
-  motor_control_kelly_pmac.torque_max = TORQUE_MAX; 
-  motor_control_kelly_pmac.speed_max = SPEED_MAX;
-
-  // set PID Parameter DMC_ZOE
-  motor_control_dmc_zoe.kp_speed = DMC_ZOE_KP_SPEED;
-  motor_control_dmc_zoe.ki_speed = DMC_ZOE_KI_SPEED;
-  motor_control_dmc_zoe.kd_speed = DMC_ZOE_KD_SPEED;
-
-  motor_control_dmc_zoe.kp_torque = DMC_ZOE_KP_TORQUE;
-  motor_control_dmc_zoe.ki_torque = DMC_ZOE_KI_TORQUE;
-  motor_control_dmc_zoe.kd_torque = DMC_ZOE_KD_TORQUE;
-
-  motor_control_dmc_zoe.kp_excitation_current = DMC_ZOE_KP_EXCITATION_CURRENT;
-  motor_control_dmc_zoe.ki_excitation_current = DMC_ZOE_KI_EXCITATION_CURRENT;
-  motor_control_dmc_zoe.kd_excitation_current = DMC_ZOE_KD_EXCITATION_CURRENT;
-
-  // set PID Parameter Kelly_PMAC
-  motor_control_kelly_pmac.kp_speed = KELLY_PMAC_KP_SPEED;
-  motor_control_kelly_pmac.ki_speed = KELLY_PMAC_KI_SPEED;
-  motor_control_kelly_pmac.kd_speed = KELLY_PMAC_KD_SPEED;
-
-  motor_control_kelly_pmac.kp_torque = KELLY_PMAC_KP_TORQUE;
-  motor_control_kelly_pmac.ki_torque = KELLY_PMAC_KI_TORQUE;
-  motor_control_kelly_pmac.kd_torque = KELLY_PMAC_KD_TORQUE;
-
-  // initialize pid controllers
-  dmc_zoe_speed_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.speed_max));
-  dmc_zoe_speed_pid.SetMode(AUTOMATIC);
-  dmc_zoe_speed_pid.SetTunings(motor_control_dmc_zoe.kp_speed, motor_control_dmc_zoe.ki_speed, motor_control_dmc_zoe.kd_speed);
-   
-  dmc_zoe_torque_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.torque_max));
-  dmc_zoe_torque_pid.SetMode(AUTOMATIC);
-  dmc_zoe_torque_pid.SetTunings(motor_control_dmc_zoe.kp_torque, motor_control_dmc_zoe.ki_torque, motor_control_dmc_zoe.kd_torque);
-
-  excitation_current_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.excitation_current_max));
-  excitation_current_pid.SetMode(AUTOMATIC);
-  excitation_current_pid.SetTunings(motor_control_dmc_zoe.kp_excitation_current, motor_control_dmc_zoe.ki_excitation_current, motor_control_dmc_zoe.kd_excitation_current);
-
-  kelly_pmac_speed_pid.SetOutputLimits(0, double(motor_control_kelly_pmac.speed_max));
-  kelly_pmac_speed_pid.SetMode(AUTOMATIC);
-  kelly_pmac_speed_pid.SetTunings(motor_control_kelly_pmac.kp_speed, motor_control_kelly_pmac.ki_speed, motor_control_kelly_pmac.kd_speed);
-
-  kelly_pmac_torque_pid.SetOutputLimits(0, double(motor_control_kelly_pmac.torque_max));
-  kelly_pmac_torque_pid.SetMode(AUTOMATIC);
-  kelly_pmac_torque_pid.SetTunings(motor_control_kelly_pmac.kp_torque, motor_control_kelly_pmac.ki_torque, motor_control_kelly_pmac.kd_torque);
-    
   // init buttons for touchscreen
   tft.fillScreen(ILI9341_BLACK);
   tft.setTextSize(1);
@@ -514,12 +402,271 @@ void setup() {
   tft.println(F("Mechanical Power DMC_ZOE (W)     : "));
   tft.println(F("Motor Efficiency DMC_ZOE (%)     : ")); 
   tft.println(F("Generator Efficiency DMC_ZOE (%) : ")); 
+  DEBUG_PRINT(">fcn_init_screen_touchscreen:"); DEBUG_PRINTLN("stop"); //debug print
+}
 
+void init_dacs(){
+  DEBUG_PRINT(">fcn_init_dacs:"); DEBUG_PRINTLN("start"); //debug print
+  // initialize digital analog converters
+
+  int retries = 0;
+
+  while (retries < MAX_RETRIES && !dac_gas_dmc.begin(ADRESS_DAC_gas_dmc)) {
+    Serial.println("Failed to initialize dac_gas_dmc. Retrying...");
+    retries++;
+    delay(DELAY_TIME_INIT_RETRY);
+  }
+
+  if (retries == MAX_RETRIES) {
+    Serial.println("Failed to initialize dac_gas_dmc after multiple attempts.");
+    // Handle the failure here
+  } else {
+    Serial.println("dac_gas_dmc initialized successfully.");
+    // Proceed with the rest of the program
+  }
+
+  retries = 0;
+
+  while (retries < MAX_RETRIES && !dac_bremse_dmc.begin(ADRESS_DAC_bremse_dmc)) {
+    Serial.println("Failed to initialize dac_bremse_dmc. Retrying...");
+    retries++;
+    delay(DELAY_TIME_INIT_RETRY);
+  }
+
+  if (retries == MAX_RETRIES) {
+    Serial.println("Failed to initialize dac_bremse_dmc after multiple attempts.");
+    // Handle the failure here
+  } else {
+    Serial.println("dac_bremse_dmc initialized successfully.");
+    // Proceed with the rest of the program
+  }
+
+  retries = 0;
+
+  while (retries < MAX_RETRIES && !dac_gas_kelly.begin(ADRESS_DAC_gas_kelly)) {
+    Serial.println("Failed to initialize dac_gas_kelly. Retrying...");
+    retries++;
+    delay(DELAY_TIME_INIT_RETRY);
+  }
+
+  if (retries == MAX_RETRIES) {
+    Serial.println("Failed to initialize dac_gas_kelly after multiple attempts.");
+    // Handle the failure here
+  } else {
+    Serial.println("dac_gas_kelly initialized successfully.");
+    // Proceed with the rest of the program
+  }
+
+  retries = 0;
+
+  while (retries < MAX_RETRIES && !dac_bremse_kelly.begin(ADRESS_DAC_bremse_kelly)) {
+    Serial.println("Failed to initialize dac_bremse_kelly. Retrying...");
+    retries++;
+    delay(DELAY_TIME_INIT_RETRY);
+  }
+
+  if (retries == MAX_RETRIES) {
+    Serial.println("Failed to initialize dac_bremse_kelly after multiple attempts.");
+    // Handle the failure here
+  } else {
+    Serial.println("dac_bremse_kelly initialized successfully.");
+    // Proceed with the rest of the program
+  }
+
+
+  dac_gas_dmc.setVoltage(0,true);
+  dac_bremse_dmc.setVoltage(0,true);
+  dac_gas_kelly.setVoltage(0,true);
+  dac_bremse_kelly.setVoltage(0,true);
+  DEBUG_PRINT(">fcn_init_dacs:"); DEBUG_PRINTLN("stop"); //debug print
+}
+
+void init_input_output_pins(){
+  DEBUG_PRINT(">fcn_init_input_output_pins:"); DEBUG_PRINTLN("start"); //debug print
+  // initialze analog input pins
+  pinMode(EXCITATION_CURRENT_POTI_ZOE_PIN,INPUT);
+  pinMode(POTI_THROTTLE_DMC_PIN,INPUT);
+  pinMode(POTI_BRAKE_DMC_PIN,INPUT);
+
+  // initialize digital output pins
+  pinMode(PWM_EXCITATION_CURRENT_ZOE_PIN,OUTPUT);
+  digitalWrite(PWM_EXCITATION_CURRENT_ZOE_PIN, LOW); 
+  
+  pinMode(FOOT_SWITCH_DMC_PIN,OUTPUT);
+  digitalWrite(FOOT_SWITCH_DMC_PIN, LOW);  
+
+  pinMode(BRAKE_SWITCH_DMC_PIN,OUTPUT);
+  digitalWrite(BRAKE_SWITCH_DMC_PIN, LOW);  
+
+  pinMode(FOOT_SWITCH_KELLY_PIN,OUTPUT);
+  digitalWrite(FOOT_SWITCH_KELLY_PIN, LOW); 
+   
+  pinMode(BRAKE_SWITCH_KELLY_PIN,OUTPUT);
+  digitalWrite(BRAKE_SWITCH_KELLY_PIN, LOW); 
+
+  pinMode(SWITCH_D_N_DMC_PIN,OUTPUT);   // set motors from Neutral to drive
+  pinMode(SWITCH_D_N_KELLY_PIN,OUTPUT);
+  digitalWrite(SWITCH_D_N_DMC_PIN,HIGH);
+  digitalWrite(SWITCH_D_N_KELLY_PIN,HIGH);
+  DEBUG_PRINT(">fcn_init_input_output_pins:"); DEBUG_PRINTLN("stop"); //debug print
+}
+
+void init_adcs(){
+  DEBUG_PRINT(">fcn_init_adcs:"); DEBUG_PRINTLN("start"); //debug print
+  // initialize analog digital converters
+  int retries = 0;
+  while (retries < MAX_RETRIES && !adc_measuring_dmc_current.begin()) {
+    Serial.println("Failed to initialize adc_measuring_dmc_current. Retrying...");
+    retries++;
+    delay(DELAY_TIME_INIT_RETRY);
+  }
+
+  if (retries == MAX_RETRIES) {
+    Serial.println("Failed to initialize adc_measuring_dmc_current after multiple attempts.");
+    // Handle the failure here
+  } else {
+    Serial.println("adc_measuring_dmc_current initialized successfully.");
+    // Proceed with the rest of the program
+  }
+    adc_vehicle_dmc_zoe.setGain(0);
+  
+  retries = 0; 
+  while (retries < MAX_RETRIES && !adc_measuring_dmc_current.begin()) {
+    Serial.println("Failed to initialize adc_measuring_dmc_current. Retrying...");
+    retries++;
+    delay(DELAY_TIME_INIT_RETRY);
+  }
+
+  if (retries == MAX_RETRIES) {
+    Serial.println("Failed to initialize adc_measuring_dmc_current after multiple attempts.");
+    // Handle the failure here
+  } else {
+    Serial.println("adc_measuring_dmc_current initialized successfully.");
+    // Proceed with the rest of the program
+  }
+  adc_measuring_shaft.setGain(0);
+
+  retries = 0;   
+  while (retries < MAX_RETRIES && !adc_measuring_dmc_current.begin()) {
+    Serial.println("Failed to initialize adc_measuring_dmc_current. Retrying...");
+    retries++;
+    delay(DELAY_TIME_INIT_RETRY);
+  }
+
+  if (retries == MAX_RETRIES) {
+    Serial.println("Failed to initialize adc_measuring_dmc_current after multiple attempts.");
+    // Handle the failure here
+  } else {
+    Serial.println("adc_measuring_dmc_current initialized successfully.");
+    // Proceed with the rest of the program
+  }
+
+  adc_measuring_dmc_current.setGain(0);
+
+  DEBUG_PRINT(">fcn_init_adcs:"); DEBUG_PRINTLN("stop"); //debug print
+}
+
+void init_measuring_shaft(){
+  DEBUG_PRINT(">fcn_init_measuring_shaft:"); DEBUG_PRINTLN("start"); //debug print
+  //set torque and speed offset, test bench must be standing still with no torque applied
+  torque_offset = ((adc_measuring_shaft.readADC(TORQUE_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1) - U_SUPPLY_MEASURING_CIRCUIT * (1+R3_LM358_OP_AMP/R1_LM358_OP_AMP) * R4_LM358_OP_AMP/(R4_LM358_OP_AMP+R2_LM358_OP_AMP))* (-R1_LM358_OP_AMP/R3_LM358_OP_AMP)) * deltaM;
+  speed_offset = (adc_measuring_shaft.readADC(SPEED_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1)*((R1_VOLTAGE_DIVIDER_MEASURING_SHAFT+R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)/R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)) * SPEED_MODE_MEASURING_SHAFT;
+  DEBUG_PRINT(">fcn_init_measuring_shaft:"); DEBUG_PRINTLN("stop"); //debug print
+}
+
+void init_current_sensors(){
+  DEBUG_PRINT(">fcn_init_current_sensors:"); DEBUG_PRINTLN("start"); //debug print
+  // initialize current sensors
+  battery_current_sensor_1.setADC(read_adc_battery_current_sensor_1,2*V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
+  battery_current_sensor_1.autoMidPoint(); 
+  battery_current_sensor_2.setADC(read_adc_battery_current_sensor_2,2*V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
+  battery_current_sensor_2.autoMidPoint(); 
+  battery_current_sensor_3.setADC(read_adc_battery_current_sensor_3,2*V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
+  battery_current_sensor_3.autoMidPoint(); 
+  excitation_current_sensor.setADC(read_adc_excitation_current_sensor,2*V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
+  excitation_current_sensor.autoMidPoint();  
+  DEBUG_PRINT(">fcn_init_current_sensors:"); DEBUG_PRINTLN("stop"); //debug print 
+}
+
+void init_controllers(){
+  DEBUG_PRINT(">fcn_init_controllers:"); DEBUG_PRINTLN("start"); //debug print
+  //set motor control mode
+  motor_control_dmc_zoe.control_mode = CONTROL_MODE_DMC_ZOE; // 0 = speed controlled , 1 = torque controlled
+  motor_control_kelly_pmac.control_mode = CONTROL_MODE_KELLY_PMAC; // 0 = speed controlled , 1 = torque controlled
+
+  //set max torque, speed, excitation current DMC_ZOE
+  motor_control_dmc_zoe.excitation_current_max = EXCITATION_CURRENT_MAX;
+  motor_control_dmc_zoe.torque_max = TORQUE_MAX; 
+  motor_control_dmc_zoe.speed_max = SPEED_MAX;
+
+  // set max torque, speed kelly_pmac
+  motor_control_kelly_pmac.torque_max = TORQUE_MAX; 
+  motor_control_kelly_pmac.speed_max = SPEED_MAX;
+
+  // set PID Parameter DMC_ZOE
+  motor_control_dmc_zoe.kp_speed = DMC_ZOE_KP_SPEED;
+  motor_control_dmc_zoe.ki_speed = DMC_ZOE_KI_SPEED;
+  motor_control_dmc_zoe.kd_speed = DMC_ZOE_KD_SPEED;
+
+  motor_control_dmc_zoe.kp_torque = DMC_ZOE_KP_TORQUE;
+  motor_control_dmc_zoe.ki_torque = DMC_ZOE_KI_TORQUE;
+  motor_control_dmc_zoe.kd_torque = DMC_ZOE_KD_TORQUE;
+
+  motor_control_dmc_zoe.kp_excitation_current = DMC_ZOE_KP_EXCITATION_CURRENT;
+  motor_control_dmc_zoe.ki_excitation_current = DMC_ZOE_KI_EXCITATION_CURRENT;
+  motor_control_dmc_zoe.kd_excitation_current = DMC_ZOE_KD_EXCITATION_CURRENT;
+
+  // set PID Parameter Kelly_PMAC
+  motor_control_kelly_pmac.kp_speed = KELLY_PMAC_KP_SPEED;
+  motor_control_kelly_pmac.ki_speed = KELLY_PMAC_KI_SPEED;
+  motor_control_kelly_pmac.kd_speed = KELLY_PMAC_KD_SPEED;
+
+  motor_control_kelly_pmac.kp_torque = KELLY_PMAC_KP_TORQUE;
+  motor_control_kelly_pmac.ki_torque = KELLY_PMAC_KI_TORQUE;
+  motor_control_kelly_pmac.kd_torque = KELLY_PMAC_KD_TORQUE;
+
+  // initialize pid controllers
+  if (motor_control_dmc_zoe.control_mode){ // 0 = speed controlled , 1 = torque controlled    
+    dmc_zoe_torque_pid.SetOutputLimits(-double(motor_control_dmc_zoe.torque_max),0);
+    dmc_zoe_torque_pid.SetMode(AUTOMATIC);
+    dmc_zoe_torque_pid.SetTunings(motor_control_dmc_zoe.kp_torque, motor_control_dmc_zoe.ki_torque, motor_control_dmc_zoe.kd_torque);
+  }else{
+    dmc_zoe_speed_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.speed_max));
+    dmc_zoe_speed_pid.SetMode(AUTOMATIC);
+    dmc_zoe_speed_pid.SetTunings(motor_control_dmc_zoe.kp_speed, motor_control_dmc_zoe.ki_speed, motor_control_dmc_zoe.kd_speed);
+  } 
+  excitation_current_pid.SetOutputLimits(0, double(motor_control_dmc_zoe.excitation_current_max));
+  excitation_current_pid.SetMode(AUTOMATIC);
+  excitation_current_pid.SetTunings(motor_control_dmc_zoe.kp_excitation_current, motor_control_dmc_zoe.ki_excitation_current, motor_control_dmc_zoe.kd_excitation_current);
+
+  if (motor_control_kelly_pmac.control_mode){ // 0 = speed controlled , 1 = torque controlled
+    kelly_pmac_torque_pid.SetOutputLimits(0, double(motor_control_kelly_pmac.torque_max));
+    kelly_pmac_torque_pid.SetMode(AUTOMATIC);
+    kelly_pmac_torque_pid.SetTunings(motor_control_kelly_pmac.kp_torque, motor_control_kelly_pmac.ki_torque, motor_control_kelly_pmac.kd_torque);
+  }else{
+    kelly_pmac_speed_pid.SetOutputLimits(0, double(motor_control_kelly_pmac.speed_max));
+    kelly_pmac_speed_pid.SetMode(AUTOMATIC);
+    kelly_pmac_speed_pid.SetTunings(motor_control_kelly_pmac.kp_speed, motor_control_kelly_pmac.ki_speed, motor_control_kelly_pmac.kd_speed);
+  }
+  DEBUG_PRINT(">fcn_init_controllers:"); DEBUG_PRINTLN("stop"); //debug print
+}
+
+// setup function
+void setup() {
+  Serial.begin(SERIAL_BAUD_RATE,SERIAL_8N1); // initialize serial communication
+  
+  init_screen_touchscreen();
+  init_dacs();
+  init_input_output_pins();
+  init_adcs();
+  init_measuring_shaft();
+  init_current_sensors();
+  init_controllers();
 }
 
 // loop function
 void loop() {
-  unsigned long loop_time = millis();
+  //unsigned long loop_time = millis(); //needed for loop time measurment
   //tasks that have a max frequqncy 
   test_bench_task(&zoe_test_bench,&motor_control_dmc_zoe,&motor_control_kelly_pmac, measuring_cycle_table, MEASURING_CYCLE_TABLE_SIZE);
   touch_task(&zoe_test_bench);
@@ -531,6 +678,6 @@ void loop() {
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
   vehicle_task(&power_supply);
   send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
-  Serial.print(">loop_time_ms:");Serial.println(millis()-loop_time);
+  //Serial.print(">loop_time_ms:");Serial.println(millis()-loop_time);
 }
   
