@@ -32,11 +32,11 @@ void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_contro
         }  
         if (closest_entry != NULL && last_entry != table_size-1) {
           // write the values of the closest entry to the current time
-          motor_control_dmc_zoe->speed_setpoint = closest_entry->rpm;
-          motor_control_kelly_pmac->speed_setpoint = closest_entry->rpm;
-          motor_control_dmc_zoe->torque_setpoint = -(closest_entry->torque);
-          motor_control_kelly_pmac->torque_setpoint = closest_entry->torque;
-          motor_control_dmc_zoe->exication_current_setpoint = closest_entry->exitacion_current;
+          motor_control_dmc_zoe->speed_setpoint = double(closest_entry->rpm);
+          motor_control_kelly_pmac->speed_setpoint = double(closest_entry->rpm);
+          motor_control_dmc_zoe->torque_setpoint = -1*double(closest_entry->torque);
+          motor_control_kelly_pmac->torque_setpoint = double(closest_entry->torque);
+          motor_control_dmc_zoe->exication_current_setpoint = double(closest_entry->exitacion_current);
         } 
         DEBUG_PRINT(">last_entry:");DEBUG_PRINTLN(last_entry);
         if (last_entry+2 == table_size){
@@ -100,7 +100,12 @@ void dmc_zoe_control_task(motor_control_def* motor_control_dmc_zoe, vehicle_def*
     motor_control_dmc_zoe->torque_sensor = measurement->torque_measuring_shaft_sensor;
     
     //read excitation_current
-    motor_control_dmc_zoe->excitation_current_sensor = excitation_current_sensor.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0;
+    double excitation_current = excitation_current_sensor.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0;
+    if (excitation_current>0 && abs(excitation_current)>0.01){ // get rid of noise around 0 A 
+      motor_control_dmc_zoe->excitation_current_sensor =  excitation_current;
+    } else {
+      motor_control_dmc_zoe->excitation_current_sensor = 0;
+    }
     
     // pid excitation_current
     excitation_current_pid.Compute();
@@ -674,6 +679,9 @@ void setup() {
   init_measuring_shaft();
   init_current_sensors();
   init_controllers();
+
+  //zoe_test_bench.mode = 1;
+  //zoe_test_bench.start = 1;
 }
 
 // loop function

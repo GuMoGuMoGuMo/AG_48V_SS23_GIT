@@ -10,7 +10,7 @@
   #include <Wire.h>
 
   // debug setup
-  #define DEBUG
+  //#define DEBUG
 
   #ifdef DEBUG //write debug print: DEBUG_PRINT(">name:"); DEBUG_PRINTLN(value); //debug print
     #define DEBUG_PRINT(x) Serial.print(x)
@@ -50,8 +50,8 @@
   #define DMC_ZOE_KI_TORQUE 8
   #define DMC_ZOE_KD_TORQUE 0
 
-  #define DMC_ZOE_KP_EXCITATION_CURRENT 1
-  #define DMC_ZOE_KI_EXCITATION_CURRENT 2.5 
+  #define DMC_ZOE_KP_EXCITATION_CURRENT 1   //1
+  #define DMC_ZOE_KI_EXCITATION_CURRENT 2.5 // 2.5
   #define DMC_ZOE_KD_EXCITATION_CURRENT 0
 
   #define KELLY_PMAC_KP_SPEED 3 //2 
