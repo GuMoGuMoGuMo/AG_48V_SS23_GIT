@@ -105,7 +105,7 @@
   #define FOOT_SWITCH_DMC_PIN 26
   #define BRAKE_SWITCH_DMC_PIN 40
 
-  #define PWM_EXCITATION_CURRENT_ZOE_PIN 11
+  #define PWM_EXCITATION_CURRENT_ZOE_PIN 13 // PIN 11 (ARD DUE) / PIN 13 (ARD MEGA)
 
   #define FOOT_SWITCH_KELLY_PIN 22
   #define BRAKE_SWITCH_KELLY_PIN 24
@@ -308,208 +308,225 @@
   struct motor_control_def motor_control_kelly_pmac;
   struct measurement_def measuring_shaft;
 
-  // define send data functions
+  // define send data functions and setup
+  #define LOOP_TIME_MEASUREMENT 0        //0: no 1:yes
+  unsigned long loop_time;
+  #define SEND_TEST_BENCH_DATA 0           //0: no 1:yes
+  #define SEND_VEHICLE_DATA 1           //0: no 1:yes  
+  #define SEND_MOTOR_CONTROL_DMC_DATA 1    //0: no 1:yes
+  #define SEND_MOTOR_CONTROL_KELLY_DATA 1   //0: no 1:yes
+  #define SEND_MEASUREMENT_DATA 0          //0: no 1:yes
 
   void send_test_bench_data_tp(test_bench_def* test_bench) {
-    Serial.print(">tb_mode:");
-    Serial.println(test_bench->mode);
-    
-    Serial.print(">tb_start:");
-    Serial.println(test_bench->start);
-    
-    Serial.print(">tb_measuring_cycle_start_time:");
-    Serial.println(test_bench->measuring_cycle_start_time);
-    
-    Serial.print(">tb_time:");
-    Serial.println(test_bench->time);
-    
-    Serial.print(">tb_stop:");
-    Serial.println(test_bench->stop);
-    
-    Serial.print(">tb_measuring_cycle:");
-    Serial.println(test_bench->measuring_cycle);
+    if (SEND_TEST_BENCH_DATA){
+      Serial.print(">tb_mode:");
+      Serial.println(test_bench->mode);
+      
+      Serial.print(">tb_start:");
+      Serial.println(test_bench->start);
+      
+      Serial.print(">tb_measuring_cycle_start_time:");
+      Serial.println(test_bench->measuring_cycle_start_time);
+      
+      Serial.print(">tb_time:");
+      Serial.println(test_bench->time);
+      
+      Serial.print(">tb_stop:");
+      Serial.println(test_bench->stop);
+      
+      Serial.print(">tb_measuring_cycle:");
+      Serial.println(test_bench->measuring_cycle);
+    }
   }
 
   void send_vehicle_data_tp(vehicle_def* vehicle) {
-    Serial.print(">vehicle_battery_voltage:");
-    Serial.println(vehicle->battery_voltage);
+    if(SEND_VEHICLE_DATA){
+      Serial.print(">vehicle_battery_voltage:");
+      Serial.println(vehicle->battery_voltage);
 
-    Serial.print(">vehicle_battery_current:");
-    Serial.println(vehicle->battery_current);
+      Serial.print(">vehicle_battery_current:");
+      Serial.println(vehicle->battery_current);
+    }
   }
 
   void send_motor_control_data_dmc_tp(motor_control_def* motor_control) {
-    Serial.print(">dmc_control_mode:");
-    Serial.println(motor_control->control_mode);
+    if(SEND_MOTOR_CONTROL_DMC_DATA){
+      Serial.print(">dmc_control_mode:");
+      Serial.println(motor_control->control_mode);
 
-    Serial.print(">dmc_excitation_current_max:");
-    Serial.println(motor_control->excitation_current_max);
+      Serial.print(">dmc_excitation_current_max:");
+      Serial.println(motor_control->excitation_current_max);
 
-    Serial.print(">dmc_torque_max:");
-    Serial.println(motor_control->torque_max);
+      Serial.print(">dmc_torque_max:");
+      Serial.println(motor_control->torque_max);
 
-    Serial.print(">dmc_speed_max:");
-    Serial.println(motor_control->speed_max);
+      Serial.print(">dmc_speed_max:");
+      Serial.println(motor_control->speed_max);
 
-    Serial.print(">dmc_throttle_poti_sensor:");
-    Serial.println(motor_control->throttle_poti_sensor);
+      Serial.print(">dmc_throttle_poti_sensor:");
+      Serial.println(motor_control->throttle_poti_sensor);
 
-    Serial.print(">dmc_brake_poti_sensor:");
-    Serial.println(motor_control->brake_poti_sensor);
+      Serial.print(">dmc_brake_poti_sensor:");
+      Serial.println(motor_control->brake_poti_sensor);
 
-    Serial.print(">dmc_excitation_current_poti_sensor:");
-    Serial.println(motor_control->excitation_current_poti_sensor);
+      Serial.print(">dmc_excitation_current_poti_sensor:");
+      Serial.println(motor_control->excitation_current_poti_sensor);
 
-    Serial.print(">dmc_speed_setpoint:");
-    Serial.println(motor_control->speed_setpoint);
+      Serial.print(">dmc_speed_setpoint:");
+      Serial.println(motor_control->speed_setpoint);
 
-    Serial.print(">dmc_torque_setpoint:");
-    Serial.println(motor_control->torque_setpoint);
+      Serial.print(">dmc_torque_setpoint:");
+      Serial.println(motor_control->torque_setpoint);
 
-    Serial.print(">dmc_speed_sensor:");
-    Serial.println(motor_control->speed_sensor);
+      Serial.print(">dmc_speed_sensor:");
+      Serial.println(motor_control->speed_sensor);
 
-    Serial.print(">dmc_torque_sensor:");
-    Serial.println(motor_control->torque_sensor);
+      Serial.print(">dmc_torque_sensor:");
+      Serial.println(motor_control->torque_sensor);
 
-    Serial.print(">dmc_speed_output:");
-    Serial.println(motor_control->speed_output);
+      Serial.print(">dmc_speed_output:");
+      Serial.println(motor_control->speed_output);
 
-    Serial.print(">dmc_torque_output:");
-    Serial.println(motor_control->torque_output);
+      Serial.print(">dmc_torque_output:");
+      Serial.println(motor_control->torque_output);
 
-    Serial.print(">dmc_excitation_current_sensor:");
-    Serial.println(motor_control->excitation_current_sensor);
+      Serial.print(">dmc_excitation_current_sensor:");
+      Serial.println(motor_control->excitation_current_sensor);
 
-    Serial.print(">dmc_excitation_current_output:");
-    Serial.println(motor_control->excitation_current_output);
+      Serial.print(">dmc_excitation_current_output:");
+      Serial.println(motor_control->excitation_current_output);
 
-    Serial.print(">dmc_excitation_current_setpoint:");
-    Serial.println(motor_control->exication_current_setpoint);
+      Serial.print(">dmc_excitation_current_setpoint:");
+      Serial.println(motor_control->exication_current_setpoint);
 
-    Serial.print(">dmc_kp_speed:");
-    Serial.println(motor_control->kp_speed);
+      Serial.print(">dmc_kp_speed:");
+      Serial.println(motor_control->kp_speed);
 
-    Serial.print(">dmc_ki_speed:");
-    Serial.println(motor_control->ki_speed);
+      Serial.print(">dmc_ki_speed:");
+      Serial.println(motor_control->ki_speed);
 
-    Serial.print(">dmc_kd_speed:");
-    Serial.println(motor_control->kd_speed);
+      Serial.print(">dmc_kd_speed:");
+      Serial.println(motor_control->kd_speed);
 
-    Serial.print(">dmc_kp_torque:");
-    Serial.println(motor_control->kp_torque);
+      Serial.print(">dmc_kp_torque:");
+      Serial.println(motor_control->kp_torque);
 
-    Serial.print(">dmc_ki_torque:");
-    Serial.println(motor_control->ki_torque);
+      Serial.print(">dmc_ki_torque:");
+      Serial.println(motor_control->ki_torque);
 
-    Serial.print(">dmc_kd_torque:");
-    Serial.println(motor_control->kd_torque);
+      Serial.print(">dmc_kd_torque:");
+      Serial.println(motor_control->kd_torque);
 
-    Serial.print(">dmc_kp_excitation_current:");
-    Serial.println(motor_control->kp_excitation_current);
+      Serial.print(">dmc_kp_excitation_current:");
+      Serial.println(motor_control->kp_excitation_current);
 
-    Serial.print(">dmc_ki_excitation_current:");
-    Serial.println(motor_control->ki_excitation_current);
+      Serial.print(">dmc_ki_excitation_current:");
+      Serial.println(motor_control->ki_excitation_current);
 
-    Serial.print(">dmc_kd_excitation_current:");
-    Serial.println(motor_control->kd_excitation_current);
+      Serial.print(">dmc_kd_excitation_current:");
+      Serial.println(motor_control->kd_excitation_current);
 
-    Serial.print(">dmc_state_foot_switch:");
-    Serial.println(motor_control->state_foot_switch);
+      Serial.print(">dmc_state_foot_switch:");
+      Serial.println(motor_control->state_foot_switch);
 
-    Serial.print(">dmc_state_brake_switch:");
-    Serial.println(motor_control->state_brake_switch);
+      Serial.print(">dmc_state_brake_switch:");
+      Serial.println(motor_control->state_brake_switch);
+    }
   }
 
   void send_motor_control_data_kelly_tp(motor_control_def* motor_control) {
-    Serial.print(">kelly_control_mode:");
-    Serial.println(motor_control->control_mode);
+    if(SEND_MOTOR_CONTROL_KELLY_DATA){
+      Serial.print(">kelly_control_mode:");
+      Serial.println(motor_control->control_mode);
 
-    Serial.print(">kelly_excitation_current_max:");
-    Serial.println(motor_control->excitation_current_max);
+      Serial.print(">kelly_excitation_current_max:");
+      Serial.println(motor_control->excitation_current_max);
 
-    Serial.print(">kelly_torque_max:");
-    Serial.println(motor_control->torque_max);
+      Serial.print(">kelly_torque_max:");
+      Serial.println(motor_control->torque_max);
 
-    Serial.print(">kelly_speed_max:");
-    Serial.println(motor_control->speed_max);
+      Serial.print(">kelly_speed_max:");
+      Serial.println(motor_control->speed_max);
 
-    Serial.print(">kelly_throttle_poti_sensor:");
-    Serial.println(motor_control->throttle_poti_sensor);
+      Serial.print(">kelly_throttle_poti_sensor:");
+      Serial.println(motor_control->throttle_poti_sensor);
 
-    Serial.print(">kelly_brake_poti_sensor:");
-    Serial.println(motor_control->brake_poti_sensor);
+      Serial.print(">kelly_brake_poti_sensor:");
+      Serial.println(motor_control->brake_poti_sensor);
 
-    Serial.print(">kelly_excitation_current_poti_sensor:");
-    Serial.println(motor_control->excitation_current_poti_sensor);
+      Serial.print(">kelly_excitation_current_poti_sensor:");
+      Serial.println(motor_control->excitation_current_poti_sensor);
 
-    Serial.print(">kelly_speed_setpoint:");
-    Serial.println(motor_control->speed_setpoint);
+      Serial.print(">kelly_speed_setpoint:");
+      Serial.println(motor_control->speed_setpoint);
 
-    Serial.print(">kelly_torque_setpoint:");
-    Serial.println(motor_control->torque_setpoint);
+      Serial.print(">kelly_torque_setpoint:");
+      Serial.println(motor_control->torque_setpoint);
 
-    Serial.print(">kelly_speed_sensor:");
-    Serial.println(motor_control->speed_sensor);
+      Serial.print(">kelly_speed_sensor:");
+      Serial.println(motor_control->speed_sensor);
 
-    Serial.print(">kelly_torque_sensor:");
-    Serial.println(motor_control->torque_sensor);
+      Serial.print(">kelly_torque_sensor:");
+      Serial.println(motor_control->torque_sensor);
 
-    Serial.print(">kelly_speed_output:");
-    Serial.println(motor_control->speed_output);
+      Serial.print(">kelly_speed_output:");
+      Serial.println(motor_control->speed_output);
 
-    Serial.print(">kelly_torque_output:");
-    Serial.println(motor_control->torque_output);
+      Serial.print(">kelly_torque_output:");
+      Serial.println(motor_control->torque_output);
 
-    Serial.print(">kelly_excitation_current_sensor:");
-    Serial.println(motor_control->excitation_current_sensor);
+      Serial.print(">kelly_excitation_current_sensor:");
+      Serial.println(motor_control->excitation_current_sensor);
 
-    Serial.print(">kelly_excitation_current_output:");
-    Serial.println(motor_control->excitation_current_output);
+      Serial.print(">kelly_excitation_current_output:");
+      Serial.println(motor_control->excitation_current_output);
 
-    Serial.print(">kelly_excitation_current_setpoint:");
-    Serial.println(motor_control->exication_current_setpoint);
+      Serial.print(">kelly_excitation_current_setpoint:");
+      Serial.println(motor_control->exication_current_setpoint);
 
-    Serial.print(">kelly_kp_speed:");
-    Serial.println(motor_control->kp_speed);
+      Serial.print(">kelly_kp_speed:");
+      Serial.println(motor_control->kp_speed);
 
-    Serial.print(">kelly_ki_speed:");
-    Serial.println(motor_control->ki_speed);
+      Serial.print(">kelly_ki_speed:");
+      Serial.println(motor_control->ki_speed);
 
-    Serial.print(">kelly_kd_speed:");
-    Serial.println(motor_control->kd_speed);
+      Serial.print(">kelly_kd_speed:");
+      Serial.println(motor_control->kd_speed);
 
-    Serial.print(">kelly_kp_torque:");
-    Serial.println(motor_control->kp_torque);
+      Serial.print(">kelly_kp_torque:");
+      Serial.println(motor_control->kp_torque);
 
-    Serial.print(">kelly_ki_torque:");
-    Serial.println(motor_control->ki_torque);
+      Serial.print(">kelly_ki_torque:");
+      Serial.println(motor_control->ki_torque);
 
-    Serial.print(">kelly_kd_torque:");
-    Serial.println(motor_control->kd_torque);
+      Serial.print(">kelly_kd_torque:");
+      Serial.println(motor_control->kd_torque);
 
-    Serial.print(">kelly_kp_excitation_current:");
-    Serial.println(motor_control->kp_excitation_current);
+      Serial.print(">kelly_kp_excitation_current:");
+      Serial.println(motor_control->kp_excitation_current);
 
-    Serial.print(">kelly_ki_excitation_current:");
-    Serial.println(motor_control->ki_excitation_current);
+      Serial.print(">kelly_ki_excitation_current:");
+      Serial.println(motor_control->ki_excitation_current);
 
-    Serial.print(">kelly_kd_excitation_current:");
-    Serial.println(motor_control->kd_excitation_current);
+      Serial.print(">kelly_kd_excitation_current:");
+      Serial.println(motor_control->kd_excitation_current);
 
-    Serial.print(">kelly_state_foot_switch:");
-    Serial.println(motor_control->state_foot_switch);
+      Serial.print(">kelly_state_foot_switch:");
+      Serial.println(motor_control->state_foot_switch);
 
-    Serial.print(">kelly_state_brake_switch:");
-    Serial.println(motor_control->state_brake_switch);
+      Serial.print(">kelly_state_brake_switch:");
+      Serial.println(motor_control->state_brake_switch);
+    }
   }
 
   void send_measurement_data_tp(measurement_def* measurement) {
-    Serial.print(">measurement_torque_measuring_shaft_sensor:");
-    Serial.println(measurement->torque_measuring_shaft_sensor);
+    if(SEND_MEASUREMENT_DATA){
+      Serial.print(">measurement_torque_measuring_shaft_sensor:");
+      Serial.println(measurement->torque_measuring_shaft_sensor);
 
-    Serial.print(">measurement_speed_measuring_shaft_sensor:");
-    Serial.println(measurement->speed_measuring_shaft_sensor);
+      Serial.print(">measurement_speed_measuring_shaft_sensor:");
+      Serial.println(measurement->speed_measuring_shaft_sensor);
+    }
   }
 
   // create pid controller
