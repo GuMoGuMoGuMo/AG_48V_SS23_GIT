@@ -34,8 +34,8 @@ void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_contro
           // write the values of the closest entry to the current time
           motor_control_dmc_zoe->speed_setpoint = double(closest_entry->rpm);
           motor_control_kelly_pmac->speed_setpoint = double(closest_entry->rpm);
-          motor_control_dmc_zoe->torque_setpoint = -1*double(closest_entry->torque);
-          motor_control_kelly_pmac->torque_setpoint = double(closest_entry->torque);
+          motor_control_dmc_zoe->torque_setpoint = -1*double(closest_entry->torque); // to brake torque at dmc must be negative
+          motor_control_kelly_pmac->torque_setpoint = double(closest_entry->torque); // to brake torque at kelly must be positive
           motor_control_dmc_zoe->exication_current_setpoint = double(closest_entry->exitacion_current);
         } 
         DEBUG_PRINT(">last_entry:");DEBUG_PRINTLN(last_entry);
@@ -72,7 +72,7 @@ void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_contro
       motor_control_dmc_zoe->torque_setpoint = (motor_control_dmc_zoe->throttle_poti_sensor-motor_control_dmc_zoe->brake_poti_sensor)/100.0*motor_control_dmc_zoe->torque_max;
       motor_control_dmc_zoe->exication_current_setpoint = motor_control_dmc_zoe->excitation_current_poti_sensor/100.0*motor_control_dmc_zoe->excitation_current_max;
       motor_control_kelly_pmac->speed_setpoint = (motor_control_kelly_pmac->throttle_poti_sensor-motor_control_kelly_pmac->brake_poti_sensor)/100.0*motor_control_kelly_pmac->speed_max;
-      motor_control_kelly_pmac->torque_setpoint = (motor_control_kelly_pmac->throttle_poti_sensor-motor_control_kelly_pmac->brake_poti_sensor)/100.0*motor_control_kelly_pmac->torque_max;
+      motor_control_kelly_pmac->torque_setpoint = -1*(motor_control_kelly_pmac->throttle_poti_sensor-motor_control_kelly_pmac->brake_poti_sensor)/100.0*motor_control_kelly_pmac->torque_max; // to brake torque at kelly must be positive
     }
     last_time_test_bench_task = millis();  
   }  
@@ -179,14 +179,14 @@ void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, vehicl
         if (motor_control_kelly_pmac->torque_output>=0) {
           dac_gas_kelly.setVoltage(0,false);
           dac_bremse_kelly.setVoltage(abs(output),false);
-          motor_control_kelly_pmac->state_foot_switch = 1;
-          motor_control_kelly_pmac->state_brake_switch = 0;
+          motor_control_kelly_pmac->state_foot_switch = 0;
+          motor_control_kelly_pmac->state_brake_switch = 1;
         }
         else { // if torque_output <0
           dac_gas_kelly.setVoltage(abs(output),false);
           dac_bremse_kelly.setVoltage(0,false);
-          motor_control_kelly_pmac->state_foot_switch = 0;
-          motor_control_kelly_pmac->state_brake_switch = 1;
+          motor_control_kelly_pmac->state_foot_switch = 1;
+          motor_control_kelly_pmac->state_brake_switch = 0;
         }
       }
     } 
@@ -686,9 +686,10 @@ void setup() {
 
 // loop function
 void loop() {
-  if(LOOP_TIME_MEASUREMENT){
+  #ifdef LOOP_TIME_MEASUREMENT
     loop_time = millis(); //needed for loop time measurment
-  }
+  #endif
+  
   //tasks that have a max frequqncy 
   test_bench_task(&zoe_test_bench,&motor_control_dmc_zoe,&motor_control_kelly_pmac, measuring_cycle_table, MEASURING_CYCLE_TABLE_SIZE);
   touch_task(&zoe_test_bench);
@@ -700,8 +701,9 @@ void loop() {
   kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
   vehicle_task(&power_supply);
   send_data_task_tp(&zoe_test_bench,&power_supply,&motor_control_dmc_zoe,&motor_control_kelly_pmac,&measuring_shaft);
-  if(LOOP_TIME_MEASUREMENT){
+  
+  #ifdef LOOP_TIME_MEASUREMENT
     Serial.print(">loop_time_ms:");Serial.println(millis()-loop_time);
-  }
+  #endif
 }
   

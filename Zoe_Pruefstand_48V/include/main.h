@@ -37,8 +37,8 @@
   #define EXCITATION_CURRENT_MAX 5
 
   //define Controller settings
-  #define CONTROL_MODE_DMC_ZOE 1 // 0 = speed controlled , 1 = torque controlled
-  #define CONTROL_MODE_KELLY_PMAC 0 // 0 = speed controlled , 1 = torque controlled
+  #define CONTROL_MODE_DMC_ZOE 0 // 0 = speed controlled , 1 = torque controlled
+  #define CONTROL_MODE_KELLY_PMAC 1 // 0 = speed controlled , 1 = torque controlled
 
   #define MIN_RPM_FOR_TORQUE 50 //rpm
 
@@ -58,8 +58,8 @@
   #define KELLY_PMAC_KI_SPEED 9//11 
   #define KELLY_PMAC_KD_SPEED 0
 
-  #define KELLY_PMAC_KP_TORQUE 3
-  #define KELLY_PMAC_KI_TORQUE 9
+  #define KELLY_PMAC_KP_TORQUE 1
+  #define KELLY_PMAC_KI_TORQUE 8 
   #define KELLY_PMAC_KD_TORQUE 0
 
   // define constants
@@ -309,7 +309,7 @@
   struct measurement_def measuring_shaft;
 
   // define send data functions and setup
-  #define LOOP_TIME_MEASUREMENT 0        //0: no 1:yes
+  //#define LOOP_TIME_MEASUREMENT        //activ: define deactivat: comment out
   unsigned long loop_time;
   #define SEND_TEST_BENCH_DATA 0           //0: no 1:yes
   #define SEND_VEHICLE_DATA 1           //0: no 1:yes  
