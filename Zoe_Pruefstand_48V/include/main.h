@@ -37,22 +37,22 @@
   #define EXCITATION_CURRENT_MAX 5
 
   //define Controller settings
-  #define CONTROL_MODE_DMC_ZOE 0 // 0 = speed controlled , 1 = torque controlled
+  #define CONTROL_MODE_DMC_Q90 0 // 0 = speed controlled , 1 = torque controlled
   #define CONTROL_MODE_KELLY_PMAC 1 // 0 = speed controlled , 1 = torque controlled
 
   #define MIN_RPM_FOR_TORQUE 50 //rpm
 
-  #define DMC_ZOE_KP_SPEED 2
-  #define DMC_ZOE_KI_SPEED 5
-  #define DMC_ZOE_KD_SPEED 0
+  #define DMC_Q90_KP_SPEED 2
+  #define DMC_Q90_KI_SPEED 5
+  #define DMC_Q90_KD_SPEED 0
 
-  #define DMC_ZOE_KP_TORQUE 1 
-  #define DMC_ZOE_KI_TORQUE 8
-  #define DMC_ZOE_KD_TORQUE 0
+  #define DMC_Q90_KP_TORQUE 1 
+  #define DMC_Q90_KI_TORQUE 8
+  #define DMC_Q90_KD_TORQUE 0
 
-  #define DMC_ZOE_KP_EXCITATION_CURRENT 1   //1
-  #define DMC_ZOE_KI_EXCITATION_CURRENT 2.5 // 2.5
-  #define DMC_ZOE_KD_EXCITATION_CURRENT 0
+  #define DMC_Q90_KP_EXCITATION_CURRENT 1   //1
+  #define DMC_Q90_KI_EXCITATION_CURRENT 2.5 // 2.5
+  #define DMC_Q90_KD_EXCITATION_CURRENT 0
 
   #define KELLY_PMAC_KP_SPEED 3 //2 
   #define KELLY_PMAC_KI_SPEED 9//11 
@@ -95,7 +95,7 @@
 
 
   // define Analog/Digital Pins
-  #define EXCITATION_CURRENT_POTI_ZOE_PIN A0
+  #define EXCITATION_CURRENT_POTI_Q90_PIN A0
   #define POTI_THROTTLE_DMC_PIN A1
   #define POTI_BRAKE_DMC_PIN A2
 
@@ -105,7 +105,7 @@
   #define FOOT_SWITCH_DMC_PIN 26
   #define BRAKE_SWITCH_DMC_PIN 40
 
-  #define PWM_EXCITATION_CURRENT_ZOE_PIN 13 // PIN 11 (ARD DUE) / PIN 13 (ARD MEGA)
+  #define PWM_EXCITATION_CURRENT_Q90_PIN 13 // PIN 11 (ARD DUE) / PIN 13 (ARD MEGA)
 
   #define FOOT_SWITCH_KELLY_PIN 22
   #define BRAKE_SWITCH_KELLY_PIN 24
@@ -165,12 +165,12 @@
 
   // define Analog-Digital Converter ADS1115
   #include "ADS1X15.h"
-  #define ADRESS_ADC_VEHICLE_DMZ_ZOE 0x48
-  #define ADRESS_ADC_MEASURING_SHAFT_ZOE 0x49
+  #define ADRESS_ADC_VEHICLE_DMZ_Q90 0x48
+  #define ADRESS_ADC_MEASURING_SHAFT_Q90 0x49
   #define ADRESS_ADC_DMC_CURRENT 0x4A
 
-  ADS1115 adc_vehicle_dmc_zoe(ADRESS_ADC_VEHICLE_DMZ_ZOE);
-  ADS1115 adc_measuring_shaft(ADRESS_ADC_MEASURING_SHAFT_ZOE);
+  ADS1115 adc_vehicle_dmc_q90(ADRESS_ADC_VEHICLE_DMZ_Q90);
+  ADS1115 adc_measuring_shaft(ADRESS_ADC_MEASURING_SHAFT_Q90);
   ADS1115 adc_measuring_dmc_current(ADRESS_ADC_DMC_CURRENT);
 
   // define analog-digital converter DMC PINS 
@@ -181,7 +181,7 @@
   #define SPEED_MEASURING_SHAFT_PIN 0
 
   // define analog-digital converter adc_measuring_dmc_current
-  #define EXCITATION_CURRENT_SENSOR_ZOE_PIN 0
+  #define EXCITATION_CURRENT_SENSOR_Q90_PIN 0
   #define BATTERY_CURRENT_SENSOR_1_PIN 1
   #define BATTERY_CURRENT_SENSOR_2_PIN 2
   #define BATTERY_CURRENT_SENSOR_3_PIN 3
@@ -210,7 +210,7 @@
   ACS712 battery_current_sensor_1(BATTERY_CURRENT_SENSOR_1_PIN, V_CC_CURRENT_SENSOR, ADS115_RESOLUTION,SENSITIVITY_CURRENT_SENSOR); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 40mV/A
   ACS712 battery_current_sensor_2(BATTERY_CURRENT_SENSOR_2_PIN, V_CC_CURRENT_SENSOR, ADS115_RESOLUTION,SENSITIVITY_CURRENT_SENSOR); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 40mV/A
   ACS712 battery_current_sensor_3(BATTERY_CURRENT_SENSOR_3_PIN, V_CC_CURRENT_SENSOR, ADS115_RESOLUTION,SENSITIVITY_CURRENT_SENSOR); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 40mV/A
-  ACS712 excitation_current_sensor(EXCITATION_CURRENT_SENSOR_ZOE_PIN, V_CC_CURRENT_SENSOR, ADS115_RESOLUTION,SENSITIVITY_CURRENT_SENSOR); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 66mV/A
+  ACS712 excitation_current_sensor(EXCITATION_CURRENT_SENSOR_Q90_PIN, V_CC_CURRENT_SENSOR, ADS115_RESOLUTION,SENSITIVITY_CURRENT_SENSOR); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 66mV/A
 
   //  wrapper needed for external analogRead()
   //  as casting behavior is undefined between different function signatures.
@@ -233,7 +233,7 @@
   //  wrapper needed for external analogRead()
   //  as casting behavior is undefined between different function signatures.
   uint16_t read_adc_excitation_current_sensor(uint8_t p) {
-    return adc_measuring_dmc_current.readADC(EXCITATION_CURRENT_SENSOR_ZOE_PIN);
+    return adc_measuring_dmc_current.readADC(EXCITATION_CURRENT_SENSOR_Q90_PIN);
   };
   
 
@@ -302,9 +302,9 @@
   };
 
   // create objects
-  struct test_bench_def zoe_test_bench;
+  struct test_bench_def q90_test_bench;
   struct vehicle_def power_supply;
-  struct motor_control_def motor_control_dmc_zoe;
+  struct motor_control_def motor_control_dmc_q90;
   struct motor_control_def motor_control_kelly_pmac;
   struct measurement_def measuring_shaft;
 
@@ -531,9 +531,9 @@
 
   // create pid controller
   #include <PID_v1.h> 
-  PID dmc_zoe_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_dmc_zoe.speed_output, &motor_control_dmc_zoe.speed_setpoint, motor_control_dmc_zoe.kp_speed, motor_control_dmc_zoe.ki_speed, motor_control_dmc_zoe.kd_speed, P_ON_E, DIRECT);
-  PID dmc_zoe_torque_pid(&measuring_shaft.torque_measuring_shaft_sensor, &motor_control_dmc_zoe.torque_output, &motor_control_dmc_zoe.torque_setpoint, motor_control_dmc_zoe.kp_torque, motor_control_dmc_zoe.ki_torque, motor_control_dmc_zoe.kd_torque, P_ON_E,DIRECT);
-  PID excitation_current_pid(&motor_control_dmc_zoe.excitation_current_sensor, &motor_control_dmc_zoe.excitation_current_output, &motor_control_dmc_zoe.exication_current_setpoint, motor_control_dmc_zoe.kp_excitation_current, motor_control_dmc_zoe.ki_excitation_current, motor_control_dmc_zoe.kd_excitation_current, P_ON_E, DIRECT);
+  PID dmc_q90_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_dmc_q90.speed_output, &motor_control_dmc_q90.speed_setpoint, motor_control_dmc_q90.kp_speed, motor_control_dmc_q90.ki_speed, motor_control_dmc_q90.kd_speed, P_ON_E, DIRECT);
+  PID dmc_q90_torque_pid(&measuring_shaft.torque_measuring_shaft_sensor, &motor_control_dmc_q90.torque_output, &motor_control_dmc_q90.torque_setpoint, motor_control_dmc_q90.kp_torque, motor_control_dmc_q90.ki_torque, motor_control_dmc_q90.kd_torque, P_ON_E,DIRECT);
+  PID excitation_current_pid(&motor_control_dmc_q90.excitation_current_sensor, &motor_control_dmc_q90.excitation_current_output, &motor_control_dmc_q90.exication_current_setpoint, motor_control_dmc_q90.kp_excitation_current, motor_control_dmc_q90.ki_excitation_current, motor_control_dmc_q90.kd_excitation_current, P_ON_E, DIRECT);
   PID kelly_pmac_speed_pid(&measuring_shaft.speed_measuring_shaft_sensor, &motor_control_kelly_pmac.speed_output, &motor_control_kelly_pmac.speed_setpoint, motor_control_kelly_pmac.kp_speed, motor_control_kelly_pmac.ki_speed, motor_control_kelly_pmac.kd_speed, P_ON_E, DIRECT);
   PID kelly_pmac_torque_pid(&measuring_shaft.torque_measuring_shaft_sensor, &motor_control_kelly_pmac.torque_output, &motor_control_kelly_pmac.torque_setpoint, motor_control_kelly_pmac.kp_torque, motor_control_kelly_pmac.ki_torque, motor_control_kelly_pmac.kd_torque, P_ON_E, DIRECT);
 
