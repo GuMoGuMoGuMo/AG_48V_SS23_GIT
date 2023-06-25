@@ -92,7 +92,7 @@ void vehicle_task(vehicle_def* vehicle) {
   DEBUG_PRINT(">fcn_vehicle_task:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
 }
 
-void dmc_q90_control_task(motor_control_def* motor_control_dmc_q90, vehicle_def* vehicle, measurement_def* measurement) {
+void dmc_q90_control_task(motor_control_def* motor_control_dmc_q90, measurement_def* measurement) {
     // dmc_q90_control_task
     DEBUG_PRINT(">fcn_dmc_q90_control_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
     // set speed & torque values using last value from measuring shaft 
@@ -101,7 +101,7 @@ void dmc_q90_control_task(motor_control_def* motor_control_dmc_q90, vehicle_def*
     
     //read excitation_current
     double excitation_current = excitation_current_sensor.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0;
-    if (excitation_current>0 && abs(excitation_current)>0.01){ // get rid of noise around 0 A 
+    if (excitation_current>0 && abs(excitation_current)>NOISE_ZERO_POINT_EXCITATION_CURRENT){ // get rid of noise around 0 A  
       motor_control_dmc_q90->excitation_current_sensor =  excitation_current;
     } else {
       motor_control_dmc_q90->excitation_current_sensor = 0;
@@ -161,7 +161,7 @@ void dmc_q90_control_task(motor_control_def* motor_control_dmc_q90, vehicle_def*
     DEBUG_PRINT(">fcn_dmc_q90_control_task:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
 }
 
-void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, vehicle_def* vehicle, measurement_def* measurement) {
+void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, measurement_def* measurement) {
   // kelly_pmac_control_task
     DEBUG_PRINT(">fcn_kelly_pmac_control_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
     // set speed & torque values using last value from measuring shaft
@@ -222,14 +222,14 @@ void measurement_task(measurement_def* measurement) {
   DEBUG_PRINT(">fcn_measurement_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   // read torque
   double torque = ((adc_measuring_shaft.readADC(TORQUE_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1) - U_SUPPLY_MEASURING_CIRCUIT * (1+R3_LM358_OP_AMP/R1_LM358_OP_AMP) * R4_LM358_OP_AMP/(R4_LM358_OP_AMP+R2_LM358_OP_AMP))* (-R1_LM358_OP_AMP/R3_LM358_OP_AMP)) * deltaM - torque_offset; // in Nm
-  if (abs(torque)>0.2){ //check abs value to filter out noise close to 0 Nm
+  if (abs(torque)>NOISE_ZERO_POINT_TORQUE){ //check abs value to filter out noise close to 0 Nm
     measurement->torque_measuring_shaft_sensor = torque;
   }else{
     measurement->torque_measuring_shaft_sensor = 0;
   }
     // read speed
   double speed = (adc_measuring_shaft.readADC(SPEED_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1)*((R1_VOLTAGE_DIVIDER_MEASURING_SHAFT+R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)/R2_VOLTAGE_DIVIDER_MEASURING_SHAFT)) * SPEED_MODE_MEASURING_SHAFT - speed_offset; //in rpm 
-  if (speed>0 && abs(speed)>1){ //check abs value to filter out noise close to 0 rpm
+  if (speed>0 && abs(speed)>NOISE_ZERO_POINT_SPEED){ //check abs value to filter out noise close to 0 rpm
     measurement->speed_measuring_shaft_sensor = speed;
   } else {
     measurement->speed_measuring_shaft_sensor = 0; // since the motors are always turning in the same direction the speed can`t be negative, so it must be an error close to 0 rpm
@@ -349,14 +349,24 @@ void touch_task(test_bench_def* test_bench){
   DEBUG_PRINT(">fcn_touch_task:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
 }
 
-void send_data_task_tp(test_bench_def* test_bench, vehicle_def* vehicle, motor_control_def* motor_control_dmc, motor_control_def* motor_control_kelly, measurement_def* measurement){
-  DEBUG_PRINT(">fcn_send_data_task_tp:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
-  send_test_bench_data_tp(test_bench);
-  send_vehicle_data_tp(vehicle);
-  send_motor_control_data_dmc_tp(motor_control_dmc);
-  send_motor_control_data_kelly_tp(motor_control_kelly);
-  send_measurement_data_tp(measurement);
-  DEBUG_PRINT(">fcn_send_data_task_tp:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
+void send_data_task_loop_tp(test_bench_def* test_bench, vehicle_def* vehicle, motor_control_def* motor_control_dmc, motor_control_def* motor_control_kelly, measurement_def* measurement){
+  DEBUG_PRINT(">fcn_send_data_task_loop_tp:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
+  send_test_bench_data_loop_tp(test_bench);
+  send_vehicle_data_loop_tp(vehicle);
+  send_motor_control_data_dmc_loop_tp(motor_control_dmc);
+  send_motor_control_data_kelly_loop_tp(motor_control_kelly);
+  send_measurement_data_loop_tp(measurement);
+  DEBUG_PRINT(">fcn_send_data_task_loop_tp:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
+}
+
+void send_data_task_setup_tp(test_bench_def* test_bench, vehicle_def* vehicle, motor_control_def* motor_control_dmc, motor_control_def* motor_control_kelly, measurement_def* measurement){
+  DEBUG_PRINT(">fcn_send_data_task_setup_tp:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
+  send_test_bench_data_setup_tp(test_bench);
+  send_vehicle_data_setup_tp(vehicle);
+  send_motor_control_data_dmc_setup_tp(motor_control_dmc);
+  send_motor_control_data_kelly_setup_tp(motor_control_kelly);
+  send_measurement_data_setup_tp(measurement);
+  DEBUG_PRINT(">fcn_send_data_task_setup_tp:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
 }
 
 void init_screen_touchscreen(){
@@ -679,7 +689,7 @@ void setup() {
   init_measuring_shaft();
   init_current_sensors();
   init_controllers();
-
+  send_data_task_setup_tp(&q90_test_bench,&power_supply,&motor_control_dmc_q90,&motor_control_kelly_pmac,&measuring_shaft);
   //q90_test_bench.mode = 1;
   //q90_test_bench.start = 1;
 }
@@ -697,10 +707,10 @@ void loop() {
   
   // tasks that are executed each loop
   measurement_task(&measuring_shaft);
-  dmc_q90_control_task(&motor_control_dmc_q90,&power_supply,&measuring_shaft);
-  kelly_pmac_control_task(&motor_control_kelly_pmac,&power_supply,&measuring_shaft);
+  dmc_q90_control_task(&motor_control_dmc_q90,&measuring_shaft);
+  kelly_pmac_control_task(&motor_control_kelly_pmac,&measuring_shaft);
   vehicle_task(&power_supply);
-  send_data_task_tp(&q90_test_bench,&power_supply,&motor_control_dmc_q90,&motor_control_kelly_pmac,&measuring_shaft);
+  send_data_task_loop_tp(&q90_test_bench,&power_supply,&motor_control_dmc_q90,&motor_control_kelly_pmac,&measuring_shaft);
   
   #ifdef LOOP_TIME_MEASUREMENT
     Serial.print(">loop_time_ms:");Serial.println(millis()-loop_time);
