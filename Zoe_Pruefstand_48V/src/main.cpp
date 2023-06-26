@@ -84,6 +84,7 @@ void vehicle_task(vehicle_def* vehicle) {
   DEBUG_PRINT(">fcn_vehicle_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   //read battery_voltage_pin
   vehicle->battery_voltage = adc_vehicle_dmc_q90.readADC(BATTERY_VOLTAGE_SENSOR_PIN)*adc_vehicle_dmc_q90.toVoltage(1)*(R2_VOLTAGE_DIVIDER_U_BATT+R1_VOLTAGE_DIVIDER_U_BATT)/R2_VOLTAGE_DIVIDER_U_BATT;
+  
   // read battery_current_pin
   vehicle->battery_current = CURRENT_DMC_ON +(battery_current_sensor_1.mA_DC(CURRENT_SENSOR_SAMPLES)+battery_current_sensor_2.mA_DC(CURRENT_SENSOR_SAMPLES)+battery_current_sensor_3.mA_DC(CURRENT_SENSOR_SAMPLES))/1000.0; // adjust with *-1 reverse direction wiring of current sensors
   //Serial.print(">bc1:"),Serial.println(battery_current_sensor_1.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0);
@@ -92,13 +93,13 @@ void vehicle_task(vehicle_def* vehicle) {
   DEBUG_PRINT(">fcn_vehicle_task:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
 }
 
-void dmc_q90_control_task(motor_control_def* motor_control_dmc_q90, measurement_def* measurement) {
+void dmc_q90_control_task(motor_control_def* motor_control_dmc_q90, measurement_def* measurement, vehicle_def* vehicle) {
     // dmc_q90_control_task
     DEBUG_PRINT(">fcn_dmc_q90_control_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
     // set speed & torque values using last value from measuring shaft 
     motor_control_dmc_q90->speed_sensor = measurement->speed_measuring_shaft_sensor;
     motor_control_dmc_q90->torque_sensor = measurement->torque_measuring_shaft_sensor;
-    
+
     //read excitation_current
     double excitation_current = excitation_current_sensor.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0;
     if (excitation_current>0 && abs(excitation_current)>NOISE_ZERO_POINT_EXCITATION_CURRENT){ // get rid of noise around 0 A  
@@ -155,13 +156,22 @@ void dmc_q90_control_task(motor_control_def* motor_control_dmc_q90, measurement_
         motor_control_dmc_q90->state_brake_switch = 1;
       } 
     }  
+
+  // set driving status
+  if (vehicle->battery_voltage > MIN_BATTERY_VOLTAGE){
+    motor_control_dmc_q90->state_drive_switch = 1;
+  } else {
+    motor_control_dmc_q90->state_drive_switch = 0;
+  }
+
     // set foot switch
     digitalWrite(FOOT_SWITCH_DMC_PIN,motor_control_dmc_q90->state_foot_switch);
     digitalWrite(BRAKE_SWITCH_DMC_PIN,motor_control_dmc_q90->state_brake_switch);
+    digitalWrite(SWITCH_D_N_DMC_PIN,motor_control_dmc_q90->state_drive_switch);
     DEBUG_PRINT(">fcn_dmc_q90_control_task:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
 }
 
-void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, measurement_def* measurement) {
+void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, measurement_def* measurement, vehicle_def* vehicle) {
   // kelly_pmac_control_task
     DEBUG_PRINT(">fcn_kelly_pmac_control_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
     // set speed & torque values using last value from measuring shaft
@@ -209,11 +219,18 @@ void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, measur
         motor_control_kelly_pmac->state_foot_switch = 0;
         motor_control_kelly_pmac->state_brake_switch = 1;
       } 
-    }  
-    // set foot switch
+    } 
+
+  // set driving status
+  if (vehicle->battery_voltage > MIN_BATTERY_VOLTAGE){
+    motor_control_kelly_pmac->state_drive_switch = 1;
+  } else {
+    motor_control_kelly_pmac->state_drive_switch = 0;
+  }
+    // set switches
     digitalWrite(FOOT_SWITCH_KELLY_PIN,motor_control_kelly_pmac->state_foot_switch);
-    // set brake switch
     digitalWrite(BRAKE_SWITCH_KELLY_PIN,motor_control_kelly_pmac->state_brake_switch);
+    digitalWrite(SWITCH_D_N_KELLY_PIN,motor_control_kelly_pmac->state_drive_switch);
     DEBUG_PRINT(">fcn_kelly_pmac_control_task:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
 }
 
@@ -533,8 +550,8 @@ void init_input_output_pins(){
 
   pinMode(SWITCH_D_N_DMC_PIN,OUTPUT);   // set motors from Neutral to drive
   pinMode(SWITCH_D_N_KELLY_PIN,OUTPUT);
-  digitalWrite(SWITCH_D_N_DMC_PIN,HIGH);
-  digitalWrite(SWITCH_D_N_KELLY_PIN,HIGH);
+  digitalWrite(SWITCH_D_N_DMC_PIN,LOW);
+  digitalWrite(SWITCH_D_N_KELLY_PIN,LOW);
   DEBUG_PRINT(">fcn_init_input_output_pins:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
 }
 
@@ -690,8 +707,6 @@ void setup() {
   init_current_sensors();
   init_controllers();
   send_data_task_setup_tp(&q90_test_bench,&power_supply,&motor_control_dmc_q90,&motor_control_kelly_pmac,&measuring_shaft);
-  //q90_test_bench.mode = 1;
-  //q90_test_bench.start = 1;
 }
 
 // loop function
@@ -707,8 +722,8 @@ void loop() {
   
   // tasks that are executed each loop
   measurement_task(&measuring_shaft);
-  dmc_q90_control_task(&motor_control_dmc_q90,&measuring_shaft);
-  kelly_pmac_control_task(&motor_control_kelly_pmac,&measuring_shaft);
+  dmc_q90_control_task(&motor_control_dmc_q90,&measuring_shaft,&power_supply);
+  kelly_pmac_control_task(&motor_control_kelly_pmac,&measuring_shaft,&power_supply);
   vehicle_task(&power_supply);
   send_data_task_loop_tp(&q90_test_bench,&power_supply,&motor_control_dmc_q90,&motor_control_kelly_pmac,&measuring_shaft);
   

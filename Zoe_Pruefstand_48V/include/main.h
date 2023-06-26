@@ -10,8 +10,9 @@
   #include <Wire.h>
 
   // debug setup
-  //#define DEBUG
+  #define DEBUG
   //#define DEBUG_SEND_ALL_DATA
+  //#define LOOP_TIME_MEASUREMENT
 
   #ifdef DEBUG //write debug print: DEBUG_PRINT(">name:"); DEBUG_PRINTLN(value); //debug print
     #define DEBUG_PRINT(x) Serial.print(x)
@@ -36,6 +37,7 @@
   #define TORQUE_MAX 40
   #define SPEED_MAX 5000 // 8000 rpm @48V PMAC
   #define EXCITATION_CURRENT_MAX 5
+  #define MIN_BATTERY_VOLTAGE 40 //V minimum voltage to set the D-Switch
 
   //define Controller settings
   #define CONTROL_MODE_DMC_Q90 0 // 0 = speed controlled , 1 = torque controlled
@@ -207,7 +209,7 @@
 
   // current sensors
   #include <ACS712.h> // Stromsensor lib
-  #define V_CC_CURRENT_SENSOR 4.91 // V
+  #define V_CC_CURRENT_SENSOR 5 // V
   #define SENSITIVITY_CURRENT_SENSOR 40 // mV/A
   #define ADS115_RESOLUTION 65535
   #define CURRENT_DMC_ON 0.4 //A
@@ -299,6 +301,7 @@
 
     bool state_foot_switch = 0; // 0: open 1:closed
     bool state_brake_switch = 0; // 0: open 1:closed
+    bool state_drive_switch = 0; // 0: open 1:closed
   };
 
   // define a structure
@@ -440,6 +443,9 @@
 
         Serial.print(">dmc_state_brake_switch:");
         Serial.println(motor_control->state_brake_switch);
+
+        Serial.print(">dmc_state_drive_switch:");
+        Serial.println(motor_control->state_drive_switch);
       #endif
     }
   }
@@ -527,6 +533,9 @@
 
         Serial.print(">kelly_state_brake_switch:");
         Serial.println(motor_control->state_brake_switch);
+
+        Serial.print(">kelly_state_drive_switch:");
+        Serial.println(motor_control->state_drive_switch);
       #endif
     }
   }
@@ -658,6 +667,9 @@
 
       Serial.print(">dmc_state_brake_switch:");
       Serial.println(motor_control->state_brake_switch);
+
+      Serial.print(">dmc_state_drive_switch:");
+      Serial.println(motor_control->state_drive_switch);
     }
   }
 
@@ -743,6 +755,9 @@
 
       Serial.print(">kelly_state_brake_switch:");
       Serial.println(motor_control->state_brake_switch);
+
+      Serial.print(">kelly_state_drive_switch:");
+      Serial.println(motor_control->state_drive_switch);
     }
   }
 
