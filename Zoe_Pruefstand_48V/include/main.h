@@ -10,7 +10,7 @@
   #include <Wire.h>
 
   // debug setup
-  #define DEBUG
+  //#define DEBUG
   //#define DEBUG_SEND_ALL_DATA
   //#define LOOP_TIME_MEASUREMENT
 
@@ -62,7 +62,7 @@
   #define KELLY_PMAC_KD_SPEED 0
 
   #define KELLY_PMAC_KP_TORQUE 1
-  #define KELLY_PMAC_KI_TORQUE 8 
+  #define KELLY_PMAC_KI_TORQUE 8
   #define KELLY_PMAC_KD_TORQUE 0
 
   // define constants
