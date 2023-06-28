@@ -91,6 +91,7 @@
   #define NOISE_ZERO_POINT_EXCITATION_CURRENT 0.01
   #define NOISE_ZERO_POINT_TORQUE 0.2
   #define NOISE_ZERO_POINT_SPEED 1
+  #define NOISE_ZERO_POINT_CURRENT 0
 
   // define task timing
   unsigned long last_time_test_bench_task = 0;
@@ -209,16 +210,16 @@
 
   // current sensors
   #include <ACS712.h> // Stromsensor lib
-  #define V_CC_CURRENT_SENSOR 5 // V
+  #define V_CC_CURRENT_SENSOR 5.03 // V
   #define SENSITIVITY_CURRENT_SENSOR 40 // mV/A
-  #define ADS115_RESOLUTION 65535
-  #define CURRENT_DMC_ON 0.4 //A
+  #define ADS115_RESOLUTION 32767 // it is a 16 bit adc but one bit is used to sign the number so the resolution is 2^15
+  #define CURRENT_DMC_ON 0.58 //A
   #define CURRENT_SENSOR_SAMPLES 2 
   #define CURRENT_SENSOR_MIDPOINT_CYCLES 100
   ACS712 battery_current_sensor_1(BATTERY_CURRENT_SENSOR_1_PIN, V_CC_CURRENT_SENSOR, ADS115_RESOLUTION,SENSITIVITY_CURRENT_SENSOR); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 40mV/A
   ACS712 battery_current_sensor_2(BATTERY_CURRENT_SENSOR_2_PIN, V_CC_CURRENT_SENSOR, ADS115_RESOLUTION,SENSITIVITY_CURRENT_SENSOR); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 40mV/A
   ACS712 battery_current_sensor_3(BATTERY_CURRENT_SENSOR_3_PIN, V_CC_CURRENT_SENSOR, ADS115_RESOLUTION,SENSITIVITY_CURRENT_SENSOR); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 40mV/A
-  ACS712 excitation_current_sensor(EXCITATION_CURRENT_SENSOR_Q90_PIN, V_CC_CURRENT_SENSOR, ADS115_RESOLUTION,SENSITIVITY_CURRENT_SENSOR); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 66mV/A
+  ACS712 excitation_current_sensor(EXCITATION_CURRENT_SENSOR_Q90_PIN, V_CC_CURRENT_SENSOR, ADS115_RESOLUTION,SENSITIVITY_CURRENT_SENSOR); // init Stomsensor Objekt: PIN, VCC, ADC Auflösung, 40mV/A
 
   //  wrapper needed for external analogRead()
   //  as casting behavior is undefined between different function signatures.

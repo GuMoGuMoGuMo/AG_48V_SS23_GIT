@@ -86,7 +86,7 @@ void vehicle_task(vehicle_def* vehicle) {
   vehicle->battery_voltage = adc_vehicle_dmc_q90.readADC(BATTERY_VOLTAGE_SENSOR_PIN)*adc_vehicle_dmc_q90.toVoltage(1)*(R2_VOLTAGE_DIVIDER_U_BATT+R1_VOLTAGE_DIVIDER_U_BATT)/R2_VOLTAGE_DIVIDER_U_BATT;
   
   // read battery_current_pin
-  vehicle->battery_current = CURRENT_DMC_ON +(battery_current_sensor_1.mA_DC(CURRENT_SENSOR_SAMPLES)+battery_current_sensor_2.mA_DC(CURRENT_SENSOR_SAMPLES)+battery_current_sensor_3.mA_DC(CURRENT_SENSOR_SAMPLES))/1000.0; // adjust with *-1 reverse direction wiring of current sensors
+  vehicle->battery_current = CURRENT_DMC_ON +(battery_current_sensor_1.mA_DC(CURRENT_SENSOR_SAMPLES)+battery_current_sensor_2.mA_DC(CURRENT_SENSOR_SAMPLES)+battery_current_sensor_3.mA_DC(CURRENT_SENSOR_SAMPLES))/1000.0;
   //Serial.print(">bc1:"),Serial.println(battery_current_sensor_1.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0);
   //Serial.print(">bc2:"),Serial.println(battery_current_sensor_2.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0);
   //Serial.print(">bc3:"),Serial.println(battery_current_sensor_3.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0);
@@ -269,10 +269,8 @@ void screen_task(motor_control_def* motor_control_dmc_q90,motor_control_def* mot
       // Excitation Current = A
       // Speed = rpm
       // Torque = N
-      // Electrical Power DMC_q90 = W
-      // Mechanical Power DMC_q90 = W
-      // Motor Efficiency DMC_q90 = %
-      // Generator Efficiency DMC_q90 = %
+      // electrical Power = W
+      // mechanical Power = W
 
     tft.setTextSize(1);
     tft.setCursor(302,26);   tft.print(test_bench->mode); 
@@ -286,22 +284,8 @@ void screen_task(motor_control_def* motor_control_dmc_q90,motor_control_def* mot
     tft.setCursor(158,106);   tft.print(vehicle->battery_voltage,2);
     tft.setCursor(86,122);   tft.print(measurement->speed_measuring_shaft_sensor,2); tft.print("   ");
     tft.setCursor(86,130);   tft.print(measurement->torque_measuring_shaft_sensor,2); tft.print("   ");
-    double electrical_power_dmc_q90 = vehicle->battery_voltage*vehicle->battery_current; tft.print("   ");
-    double mechanical_power_dmc_q90 = measurement->speed_measuring_shaft_sensor*measurement->torque_measuring_shaft_sensor*2*PI/60;
-    tft.setCursor(206,146);   tft.print(electrical_power_dmc_q90,2); tft.print("  ");
-    tft.setCursor(206,154);   tft.print(mechanical_power_dmc_q90,2); tft.print("  ");
-    double motor_efficiency_dmc_q90;
-    double generator_efficiency_dmc_q90;
-    if(mechanical_power_dmc_q90<electrical_power_dmc_q90){
-      motor_efficiency_dmc_q90 = mechanical_power_dmc_q90/electrical_power_dmc_q90;
-      generator_efficiency_dmc_q90 = 0;
-    }
-    else{
-      motor_efficiency_dmc_q90 = 0;
-      generator_efficiency_dmc_q90 = electrical_power_dmc_q90/mechanical_power_dmc_q90;  
-    }
-    tft.setCursor(206,162);   tft.print(motor_efficiency_dmc_q90,2); tft.print("  ");
-    tft.setCursor(206,170);   tft.print(generator_efficiency_dmc_q90,2); tft.print("  ");
+    tft.setCursor(206,146);   tft.print((vehicle->battery_voltage*vehicle->battery_current),2); tft.print("  ");
+    tft.setCursor(206,154);   tft.print(((measurement->speed_measuring_shaft_sensor*measurement->torque_measuring_shaft_sensor*2*PI)/60),2); tft.print("  ");
   last_time_screen_task = millis();
   }  
   DEBUG_PRINT(">fcn_screen_task:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
@@ -444,8 +428,6 @@ void init_screen_touchscreen(){
   tft.println();
   tft.println(F("Electrical Power DMC_q90 (W)     : "));
   tft.println(F("Mechanical Power DMC_q90 (W)     : "));
-  tft.println(F("Motor Efficiency DMC_q90 (%)     : ")); 
-  tft.println(F("Generator Efficiency DMC_q90 (%) : ")); 
   DEBUG_PRINT(">fcn_init_screen_touchscreen:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
 }
 
@@ -486,7 +468,7 @@ void init_dacs(){
   }
 
   retries = 0;
-
+  
   while (retries < MAX_RETRIES && !dac_gas_kelly.begin(ADRESS_DAC_gas_kelly)) {
     Serial.println("Failed to initialize dac_gas_kelly. Retrying...");
     retries++;
@@ -516,7 +498,7 @@ void init_dacs(){
     Serial.println("dac_bremse_kelly initialized successfully.");
     // Proceed with the rest of the program
   }
-
+  
 
   dac_gas_dmc.setVoltage(0,true);
   dac_bremse_dmc.setVoltage(0,true);
@@ -621,14 +603,15 @@ void init_measuring_shaft(){
 void init_current_sensors(){
   DEBUG_PRINT(">fcn_init_current_sensors:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   // initialize current sensors
-  battery_current_sensor_1.setADC(read_adc_battery_current_sensor_1,2*V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
+  battery_current_sensor_1.setADC(read_adc_battery_current_sensor_1,V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
   battery_current_sensor_1.autoMidPoint(); 
-  battery_current_sensor_2.setADC(read_adc_battery_current_sensor_2,2*V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
+  battery_current_sensor_2.setADC(read_adc_battery_current_sensor_2,V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
   battery_current_sensor_2.autoMidPoint(); 
-  battery_current_sensor_3.setADC(read_adc_battery_current_sensor_3,2*V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
+  battery_current_sensor_3.setADC(read_adc_battery_current_sensor_3,V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
   battery_current_sensor_3.autoMidPoint(); 
-  excitation_current_sensor.setADC(read_adc_excitation_current_sensor,2*V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
+  excitation_current_sensor.setADC(read_adc_excitation_current_sensor,V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
   excitation_current_sensor.autoMidPoint();  
+  
   DEBUG_PRINT(">fcn_init_current_sensors:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task 
 }
 
