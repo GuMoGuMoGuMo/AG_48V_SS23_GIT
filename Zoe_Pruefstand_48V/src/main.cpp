@@ -3,6 +3,7 @@
 // define tasks
 
 void test_bench_task(test_bench_def* test_bench, motor_control_def* motor_control_dmc_q90,motor_control_def* motor_control_kelly_pmac,const struct measuring_cycle_def* table_ptr, size_t table_size) {
+  //test_bench_task to set setpoint values for the controllers and handle the measuring cycles when testbench is in auto mode
   DEBUG_PRINT(">fcn_test_bench_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   if (millis()-last_time_test_bench_task>MIN_TIME_BETWEEN_TEST_BENCH_TASK_EXEC){ //minimum time  between exec is set to save cpu capacity for the control tasks
     // test_bench_task
@@ -87,23 +88,20 @@ void vehicle_task(vehicle_def* vehicle) {
   
   // read battery_current_pin
   vehicle->battery_current = CURRENT_DMC_ON +(battery_current_sensor_1.mA_DC(CURRENT_SENSOR_SAMPLES)+battery_current_sensor_2.mA_DC(CURRENT_SENSOR_SAMPLES)+battery_current_sensor_3.mA_DC(CURRENT_SENSOR_SAMPLES))/1000.0;
-  //Serial.print(">bc1:"),Serial.println(battery_current_sensor_1.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0);
-  //Serial.print(">bc2:"),Serial.println(battery_current_sensor_2.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0);
-  //Serial.print(">bc3:"),Serial.println(battery_current_sensor_3.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0);
   DEBUG_PRINT(">fcn_vehicle_task:"); DEBUG_PRINTLN(0); //debug print 1:start task 0:stop task
 }
 
 void dmc_q90_control_task(motor_control_def* motor_control_dmc_q90, measurement_def* measurement, vehicle_def* vehicle) {
-    // dmc_q90_control_task
+    // dmc_q90_control_task to calculate controller, set dac outputs and switches
     DEBUG_PRINT(">fcn_dmc_q90_control_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
     // set speed & torque values using last value from measuring shaft 
-    motor_control_dmc_q90->speed_sensor = measurement->speed_measuring_shaft_sensor;
-    motor_control_dmc_q90->torque_sensor = measurement->torque_measuring_shaft_sensor;
+    motor_control_dmc_q90->speed_sensor = measurement->speed_measuring_shaft_sensor; // get value from measuring shaft
+    motor_control_dmc_q90->torque_sensor = measurement->torque_measuring_shaft_sensor; // get value from measuring shaft
 
     //read excitation_current
-    double excitation_current = excitation_current_sensor.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0;
+    double excitation_current = excitation_current_sensor.mA_DC(CURRENT_SENSOR_SAMPLES)/1000.0; // get excitation current
     if (excitation_current>0 && abs(excitation_current)>NOISE_ZERO_POINT_EXCITATION_CURRENT){ // get rid of noise around 0 A  
-      motor_control_dmc_q90->excitation_current_sensor =  excitation_current;
+      motor_control_dmc_q90->excitation_current_sensor =  excitation_current; 
     } else {
       motor_control_dmc_q90->excitation_current_sensor = 0;
     }
@@ -111,7 +109,7 @@ void dmc_q90_control_task(motor_control_def* motor_control_dmc_q90, measurement_
     // pid excitation_current
     excitation_current_pid.Compute();
     // set pwm excitation_current
-    int dc_pwm = round((constrain(motor_control_dmc_q90->excitation_current_output/motor_control_dmc_q90->excitation_current_max,0,1)*100.0));
+    int dc_pwm = round((constrain(motor_control_dmc_q90->excitation_current_output/motor_control_dmc_q90->excitation_current_max,0,1)*100.0)); // calc PWM Duty cycle
     analogWrite(PWM_EXCITATION_CURRENT_Q90_PIN,round(dc_pwm/100.0*255.0)); // frequ= 980 Hz Value = DC 0...255
 
     int percentage; 
@@ -172,11 +170,11 @@ void dmc_q90_control_task(motor_control_def* motor_control_dmc_q90, measurement_
 }
 
 void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, measurement_def* measurement, vehicle_def* vehicle) {
-  // kelly_pmac_control_task
+  // kelly_pmac_control_task to calculate controller, set dac outputs and switches
     DEBUG_PRINT(">fcn_kelly_pmac_control_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
     // set speed & torque values using last value from measuring shaft
-    motor_control_kelly_pmac->speed_sensor = measurement->speed_measuring_shaft_sensor;
-    motor_control_kelly_pmac->torque_sensor = measurement->torque_measuring_shaft_sensor;
+    motor_control_kelly_pmac->speed_sensor = measurement->speed_measuring_shaft_sensor; // get value from measuring shaft
+    motor_control_kelly_pmac->torque_sensor = measurement->torque_measuring_shaft_sensor; // get value from measuring shaft
 
     int percentage;
     if (motor_control_kelly_pmac->control_mode){// 0 = speed controlled , 1 = torque controlled
@@ -235,7 +233,7 @@ void kelly_pmac_control_task(motor_control_def* motor_control_kelly_pmac, measur
 }
 
 void measurement_task(measurement_def* measurement) {
-  // measurement_task
+  // measurement_task: read in torque and speed values from the measuring shaft
   DEBUG_PRINT(">fcn_measurement_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   // read torque
   double torque = ((adc_measuring_shaft.readADC(TORQUE_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1) - U_SUPPLY_MEASURING_CIRCUIT * (1+R3_LM358_OP_AMP/R1_LM358_OP_AMP) * R4_LM358_OP_AMP/(R4_LM358_OP_AMP+R2_LM358_OP_AMP))* (-R1_LM358_OP_AMP/R3_LM358_OP_AMP)) * deltaM - torque_offset; // in Nm
@@ -255,6 +253,7 @@ void measurement_task(measurement_def* measurement) {
 }
 
 void screen_task(motor_control_def* motor_control_dmc_q90,motor_control_def* motor_control_kelly_pmac ,vehicle_def* vehicle,measurement_def* measurement,test_bench_def* test_bench) {
+  // function purpose: updated screen values during loop()
   DEBUG_PRINT(">fcn_screen_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   if (millis()-last_time_screen_task>MIN_TIME_BETWEEN_SCREEN_TASK_EXEC){ //minimum time  between exec is set to save cpu capacity for the control tasks
       // screen_task
@@ -292,6 +291,7 @@ void screen_task(motor_control_def* motor_control_dmc_q90,motor_control_def* mot
 }
 
 void touch_task(test_bench_def* test_bench){
+  // // function purpose: check if a touch button is being pressed and set the values in testbench struct
   DEBUG_PRINT(">fcn_touch_task:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   if (millis()-last_time_touch_task>MIN_TIME_BETWEEN_TOUCH_TASK_EXEC){ //minimum time  between exec is set to save cpu capacity for the control tasks
     //touch task
@@ -351,6 +351,7 @@ void touch_task(test_bench_def* test_bench){
 }
 
 void send_data_task_loop_tp(test_bench_def* test_bench, vehicle_def* vehicle, motor_control_def* motor_control_dmc, motor_control_def* motor_control_kelly, measurement_def* measurement){
+  // only send data releant for calculating performance and controller monitoring of the testbench to save time during the loop
   DEBUG_PRINT(">fcn_send_data_task_loop_tp:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   send_test_bench_data_loop_tp(test_bench);
   send_vehicle_data_loop_tp(vehicle);
@@ -361,6 +362,7 @@ void send_data_task_loop_tp(test_bench_def* test_bench, vehicle_def* vehicle, mo
 }
 
 void send_data_task_setup_tp(test_bench_def* test_bench, vehicle_def* vehicle, motor_control_def* motor_control_dmc, motor_control_def* motor_control_kelly, measurement_def* measurement){
+  // function purpose: send all available data during setup up (to save all needed parameters for example controller settings for later examination)
   DEBUG_PRINT(">fcn_send_data_task_setup_tp:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   send_test_bench_data_setup_tp(test_bench);
   send_vehicle_data_setup_tp(vehicle);
@@ -371,6 +373,7 @@ void send_data_task_setup_tp(test_bench_def* test_bench, vehicle_def* vehicle, m
 }
 
 void init_screen_touchscreen(){
+  // function purpose: init and set display and touchscreen with values from main.h
   DEBUG_PRINT(">fcn_init_screen_touchscreen:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   // initialize screen
   delay(1000); // delay need for display controller to power up before beiing initialized
@@ -432,6 +435,7 @@ void init_screen_touchscreen(){
 }
 
 void init_dacs(){
+  // function purpose: init and set dacs with values from main.h using warning msg in case of failed setup
   DEBUG_PRINT(">fcn_init_dacs:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   // initialize digital analog converters
 
@@ -508,6 +512,7 @@ void init_dacs(){
 }
 
 void init_input_output_pins(){
+  // function purpose: init and set input and output pins with values from main.h
   DEBUG_PRINT(">fcn_init_input_output_pins:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   // initialze analog input pins
   pinMode(EXCITATION_CURRENT_POTI_Q90_PIN,INPUT);
@@ -538,6 +543,7 @@ void init_input_output_pins(){
 }
 
 void init_adcs(){
+  // function purpose: init and set adcs with values from main.h using warning msg in case of failed setup
   DEBUG_PRINT(">fcn_init_adcs:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   // initialize analog digital converters
   int retries = 0;
@@ -593,6 +599,7 @@ void init_adcs(){
 }
 
 void init_measuring_shaft(){
+   // function purpose: init and set measuring shaft with values from main.h
   DEBUG_PRINT(">fcn_init_measuring_shaft:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   //set torque and speed offset, test bench must be standing still with no torque applied
   torque_offset = ((adc_measuring_shaft.readADC(TORQUE_MEASURING_SHAFT_PIN)*adc_measuring_shaft.toVoltage(1) - U_SUPPLY_MEASURING_CIRCUIT * (1+R3_LM358_OP_AMP/R1_LM358_OP_AMP) * R4_LM358_OP_AMP/(R4_LM358_OP_AMP+R2_LM358_OP_AMP))* (-R1_LM358_OP_AMP/R3_LM358_OP_AMP)) * deltaM;
@@ -601,6 +608,7 @@ void init_measuring_shaft(){
 }
 
 void init_current_sensors(){
+   // function purpose: init and set current sensors with values from main.h
   DEBUG_PRINT(">fcn_init_current_sensors:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   // initialize current sensors
   battery_current_sensor_1.setADC(read_adc_battery_current_sensor_1,V_CC_CURRENT_SENSOR, ADS115_RESOLUTION);
@@ -616,6 +624,7 @@ void init_current_sensors(){
 }
 
 void init_controllers(){
+  // function purpose: init and set controllers with values from main.h
   DEBUG_PRINT(">fcn_init_controllers:"); DEBUG_PRINTLN(1); //debug print 1:start task 0:stop task
   //set motor control mode
   motor_control_dmc_q90.control_mode = CONTROL_MODE_DMC_Q90; // 0 = speed controlled , 1 = torque controlled
@@ -681,7 +690,7 @@ void init_controllers(){
 // setup function
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE,SERIAL_8N1); // initialize serial communication
-  
+  // execute uC Setup functions
   init_screen_touchscreen();
   init_dacs();
   init_input_output_pins();
@@ -694,16 +703,16 @@ void setup() {
 
 // loop function
 void loop() {
-  #ifdef LOOP_TIME_MEASUREMENT
+  #ifdef LOOP_TIME_MEASUREMENT // activate/ deactivate in main.h
     loop_time = millis(); //needed for loop time measurment
   #endif
   
-  //tasks that have a max frequqncy 
+  //tasks that have a max frequency and are not crucial for the controllers (set frequ in main.h)
   test_bench_task(&q90_test_bench,&motor_control_dmc_q90,&motor_control_kelly_pmac, measuring_cycle_table, MEASURING_CYCLE_TABLE_SIZE);
   touch_task(&q90_test_bench);
   screen_task(&motor_control_dmc_q90,&motor_control_kelly_pmac,&power_supply,&measuring_shaft,&q90_test_bench);
   
-  // tasks that are executed each loop
+  // tasks that are executed each loop for controller performance
   measurement_task(&measuring_shaft);
   dmc_q90_control_task(&motor_control_dmc_q90,&measuring_shaft,&power_supply);
   kelly_pmac_control_task(&motor_control_kelly_pmac,&measuring_shaft,&power_supply);

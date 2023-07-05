@@ -9,7 +9,7 @@
   #include <stdint.h>
   #include <Wire.h>
 
-  // debug setup
+  // debug setup (uncomment defines to activate debug messages)
   //#define DEBUG
   //#define DEBUG_SEND_ALL_DATA
   //#define LOOP_TIME_MEASUREMENT
@@ -25,7 +25,6 @@
   //I2C, SPI device init settings
   #define MAX_RETRIES 3
   #define DELAY_TIME_INIT_RETRY 500
-
 
   //#include measuring cycles
   #include "measuring_cycle.h"
@@ -66,39 +65,39 @@
   #define KELLY_PMAC_KD_TORQUE 0
 
   // define constants
-  #define R_EXCITATION_COIL 8.5
-  #define L_EXCITATION_COIL 1
-  #define R1_VOLTAGE_DIVIDER_U_BATT 100000
-  #define R2_VOLTAGE_DIVIDER_U_BATT 5600
+  #define R_EXCITATION_COIL 8.5 // Ohm
+  #define L_EXCITATION_COIL 0.4 // Henry 
+  #define R1_VOLTAGE_DIVIDER_U_BATT 100000 // Ohm
+  #define R2_VOLTAGE_DIVIDER_U_BATT 5600 // Ohm
 
   // define measuring shaft constants
   #define SPEED_MODE_MEASURING_SHAFT 600 // rpm/V
-  #define R1_VOLTAGE_DIVIDER_MEASURING_SHAFT 21.56e03
-  #define R2_VOLTAGE_DIVIDER_MEASURING_SHAFT 21.37e03
+  #define R1_VOLTAGE_DIVIDER_MEASURING_SHAFT 21.56e03 // Ohm
+  #define R2_VOLTAGE_DIVIDER_MEASURING_SHAFT 21.37e03 // Ohm
 
-  #define R1_LM358_OP_AMP 11.9e03
-  #define R2_LM358_OP_AMP 11.75e03
-  #define R3_LM358_OP_AMP 3.24e03
-  #define R4_LM358_OP_AMP 3.29e03
+  #define R1_LM358_OP_AMP 11.9e03 // Ohm
+  #define R2_LM358_OP_AMP 11.75e03 // Ohm
+  #define R3_LM358_OP_AMP 3.24e03 // Ohm
+  #define R4_LM358_OP_AMP 3.29e03 // Ohm
 
-  double torque_offset;
-  double speed_offset;
+  double torque_offset; //init offset variable
+  double speed_offset; //init offset variable
 
-  #define U_SUPPLY_MEASURING_CIRCUIT 9.9
+  #define U_SUPPLY_MEASURING_CIRCUIT 9.9 //used for adjusting measurement shaft calculations
   #define deltaM 10 //delta M in Nm/V
 
-  // define Zero Point Noise
-  #define NOISE_ZERO_POINT_EXCITATION_CURRENT 0.01
-  #define NOISE_ZERO_POINT_TORQUE 0.2
-  #define NOISE_ZERO_POINT_SPEED 1
-  #define NOISE_ZERO_POINT_CURRENT 0
+  // define Zero Point Noise (this value is used as a barrier around the zero point to reduce noise around it)
+  #define NOISE_ZERO_POINT_EXCITATION_CURRENT 0.01 //A
+  #define NOISE_ZERO_POINT_TORQUE 0.2 //Nm
+  #define NOISE_ZERO_POINT_SPEED 1 // rpm
+  #define NOISE_ZERO_POINT_CURRENT 0 //A
 
   // define task timing
-  unsigned long last_time_test_bench_task = 0;
+  unsigned long last_time_test_bench_task = 0; // init with 0
   #define MIN_TIME_BETWEEN_TEST_BENCH_TASK_EXEC 500 // in ms
-  unsigned long last_time_touch_task = 0;
+  unsigned long last_time_touch_task = 0; // init with 0
   #define MIN_TIME_BETWEEN_TOUCH_TASK_EXEC 1000 // in ms
-  unsigned long last_time_screen_task = 0;
+  unsigned long last_time_screen_task = 0; // init with 0
   #define MIN_TIME_BETWEEN_SCREEN_TASK_EXEC 1000 // in ms
 
 
@@ -126,18 +125,13 @@
   #define SWITCH_D_N_KELLY_PIN 38
 
 
-  // define ILI9341+Touchscreen
-  #include <SPI.h>
-  #include <stdint.h>
+  //include and defines for ILI9341+Touchscreen
   #include <TouchScreen.h>
   #include <Adafruit_ILI9341.h>
-  //#include <ILI9341_due_config.h>
-  //#include <ILI9341_due.h>
   #include "hs_esslingen_logo_bitmap.h"
 
-
-  #define WIDTH  ILI9341_TFTWIDTH
-  #define HEIGHT ILI9341_TFTHEIGHT
+  #define WIDTH  ILI9341_TFTWIDTH // set screen width
+  #define HEIGHT ILI9341_TFTHEIGHT // set screen height
 
   #define TFT_DC 32
   #define TFT_CS 30
@@ -147,27 +141,29 @@
   #define YM 34   // can be a digital pin
   #define XP 32   // can be a digital pin
 
-  #define X_MAX 885
+  // touch boundaries
+  #define X_MAX 885 
   #define X_MIN 132
   #define Y_MAX 921
   #define Y_MIN 99
 
+  // location touch button 1
   #define BUTTON1_TOP_LEFT_X 5
   #define BUTTON1_TOP_LEFT_Y 190
   #define BUTTON1_WIDTH 100
   #define BUTTON1_HEIGHT 40
-
+  //location touch button 2
   #define BUTTON2_TOP_LEFT_X 110
   #define BUTTON2_TOP_LEFT_Y 190
   #define BUTTON2_WIDTH 100
   #define BUTTON2_HEIGHT 40
-
+  //location touch button 3
   #define BUTTON3_TOP_LEFT_X 215
   #define BUTTON3_TOP_LEFT_Y 190
   #define BUTTON3_WIDTH 100
   #define BUTTON3_HEIGHT 40
 
-  //ILI9341_due tft = ILI9341_due(TFT_CS, TFT_DC, TFT_RST);
+  // init screen and touch objects
   Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
   TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
   TSPoint touchPoint;
@@ -177,7 +173,7 @@
   #define ADRESS_ADC_VEHICLE_DMZ_Q90 0x48
   #define ADRESS_ADC_MEASURING_SHAFT_Q90 0x49
   #define ADRESS_ADC_DMC_CURRENT 0x4A
-
+  // init adc objects 
   ADS1115 adc_vehicle_dmc_q90(ADRESS_ADC_VEHICLE_DMZ_Q90);
   ADS1115 adc_measuring_shaft(ADRESS_ADC_MEASURING_SHAFT_Q90);
   ADS1115 adc_measuring_dmc_current(ADRESS_ADC_DMC_CURRENT);
@@ -202,6 +198,7 @@
   #define ADRESS_DAC_bremse_dmc 0x63
   #define ADRESS_DAC_gas_kelly 0x60
   #define ADRESS_DAC_bremse_kelly 0x61
+  // init dac objects
   Adafruit_MCP4725 dac_gas_dmc;
   Adafruit_MCP4725 dac_bremse_dmc;
   Adafruit_MCP4725 dac_gas_kelly;
@@ -245,7 +242,7 @@
     return adc_measuring_dmc_current.readADC(EXCITATION_CURRENT_SENSOR_Q90_PIN);
   };
   
-
+// data storage
   // define a structure
   struct test_bench_def {  
     bool mode = 0; // 1:automatik 0:manuell
@@ -318,9 +315,10 @@
   struct motor_control_def motor_control_kelly_pmac;
   struct measurement_def measuring_shaft;
 
-  // define send data functions and setup
-  //#define LOOP_TIME_MEASUREMENT        //activ: define deactivat: comment out
-  unsigned long loop_time;
+// define send data functions and setup
+//#define LOOP_TIME_MEASUREMENT        //activ: define deactivat: comment out
+  unsigned long loop_time; // init var to measure loop time
+  // activate/deactivat Data transfer during Setup()
   #define SEND_TEST_BENCH_DATA 0           //0: no 1:yes
   #define SEND_VEHICLE_DATA 1           //0: no 1:yes  
   #define SEND_MOTOR_CONTROL_DMC_DATA 1    //0: no 1:yes

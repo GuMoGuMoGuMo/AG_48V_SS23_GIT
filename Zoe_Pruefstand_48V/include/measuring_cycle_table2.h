@@ -1,7 +1,4 @@
-#include <stdint.h>
-
-#ifndef STDINT_H
-#define STDINT_H
+#include <stdint.h>  //include for usage of uint16_t in struct def
 
 typedef struct {
     uint16_t time;       // Time in seconds
@@ -10,8 +7,9 @@ typedef struct {
     float exitacion_current; // Excitation Current in Ampere (A)
 } measuring_cycle_def;
 
-#define MEASURING_CYCLE_TABLE_SIZE 250
+#define MEASURING_CYCLE_TABLE_SIZE 250 //set number of table entries here
 
+// active table
 const measuring_cycle_def measuring_cycle_table[MEASURING_CYCLE_TABLE_SIZE] = {
     {0, 500, 0, 1.00},
     {3, 500, 0, 2.00},
@@ -264,5 +262,3 @@ const measuring_cycle_def measuring_cycle_table[MEASURING_CYCLE_TABLE_SIZE] = {
     {744, 5000, 40, 4.00},
     {747, 5000, 40, 5.00}
 };
-
-#endif /* MEASURING_CYCLE_TABLE_H */
